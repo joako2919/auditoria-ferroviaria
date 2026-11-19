@@ -61,10 +61,10 @@ function readH21Overrides0729(){
   const entries=matrix.filter(row=>Array.isArray(row)&&row.some(x=>clean(x)));
   if(!entries.length)return [];
   const patterns={
-   personal:[['nombre','apellido','name'],['legajo','leg','nrolegajo']],
-   senales:[['senal','senial','id','codigo'],['pk','punto kilometrico','km','progresiva']],
-   velocidades:[['velocidad','vel','kmh'],['pk','inicio','desde','progresiva']],
-   horarios:[['estacion','parada','station'],['tren','servicio','nrotren','numero tren','llegada','partida','paso','hora']]
+   personal:[['nombre','apellido','name','apellido y nombre','apellidos y nombres','apellido_nombre','personal'],['legajo','leg','nrolegajo','nro legajo','numero de legajo','legajo n']],
+   senales:[['senal','señal','senial','id','codigo','identificacion'],['pk','punto kilometrico','punto kilométrico','km','progresiva','ubicacion']],
+   velocidades:[['velocidad','vel','kmh','km/h','velocidad maxima','velocidad máxima'],['pk','inicio','desde','progresiva','punto kilometrico','punto kilométrico']],
+   horarios:[['estacion','estación','parada','station'],['tren','servicio','nrotren','nro tren','numero tren','llegada','partida','paso','hora salida','hora llegada']]
   }[kind];
   const idx=entries.findIndex((r,i)=>i<16&&patterns.every(set=>r.some(v=>set.some(name=>norm(v)===norm(name)))));
   if(idx<0)throw Error('Hoja "'+tab+'": no se reconocieron encabezados para '+kind+'. Revisá los nombres de las columnas.');
@@ -254,6 +254,7 @@ function readH21Overrides0729(){
    for(const [n,st] of Object.entries(trains)){
     if(!st.length)continue;
     st.sort((a,b)=>a[0]-b[0]||a[2]-b[2]);
+    if(typeof H21_DB_0721!=='undefined'&&H21_DB_0721[group]&&H21_DB_0721[group][n]&&H21_DB_0721[group][n][0]!=='P')throw Error('El tren '+n+' está definido como circulación NO auditable en el H21: no puede sobrescribirse como tren de pasajeros.');
     store[n]=['P',0,st];
     count+=st.length;services++;
     samples.push(group+' · '+n+' · '+st.length+' horarios');
