@@ -61,15 +61,44 @@ function readH21Overrides0729(){
   const entries=matrix.filter(row=>Array.isArray(row)&&row.some(x=>clean(x)));
   if(!entries.length)return [];
   const patterns={
-   personal:[['nombre','apellido','name','apellido y nombre','apellidos y nombres','apellido_nombre','personal'],['legajo','leg','nrolegajo','nro legajo','numero de legajo','legajo n']],
    senales:[['senal','señal','senial','id','codigo','identificacion'],['pk','punto kilometrico','punto kilométrico','km','progresiva','ubicacion']],
    velocidades:[['velocidad','vel','kmh','km/h','velocidad maxima','velocidad máxima'],['pk','inicio','desde','progresiva','punto kilometrico','punto kilométrico']],
    horarios:[['estacion','estación','parada','station'],['tren','servicio','nrotren','nro tren','numero tren','llegada','partida','paso','hora salida','hora llegada']]
-  }[kind];
-  const idx=entries.findIndex((r,i)=>i<16&&patterns.every(set=>r.some(v=>set.some(name=>norm(v)===norm(name)))));
-  if(idx<0)throw Error('Hoja "'+tab+'": no se reconocieron encabezados para '+kind+'. Revisá los nombres de las columnas.');
+  };
+  function headerMatch(row){
+   const cols=row.map(x=>norm(x));
+   if(kind==='personal'){
+    const hasLeg=cols.some(x=>x==='leg'||x.includes('legajo')||x.includes('legaj'));
+    const combined=cols.some(x=>x==='name'||x.includes('apellidoynombr')||x.includes('nombreyapellid')||x==='personal'||x==='agente');
+    const separate=cols.some(x=>x==='apellido'||x==='apellidos')&&cols.some(x=>x==='nombre'||x==='nombres');
+    return hasLeg&&(combined||separate);
+   }
+   return (patterns[kind]||[]).every(group=>cols.some(x=>group.some(word=>x===norm(word))));
+  }
+  // Algunas planillas oficiales tienen títulos y celdas combinadas antes del encabezado.
+  const idx=entries.findIndex((r,i)=>i<120&&headerMatch(r));
+  if(idx<0)return [];
   const header=entries[idx].map((x,i)=>clean(x)||'columna_'+i);
   return entries.slice(idx+1).map(r=>Object.fromEntries(header.map((h,i)=>[h,r[i]==null?'':r[i]]))).filter(r=>Object.values(r).some(x=>clean(x)));
+ }
+ function personName(row){
+  const joined=field(row,['name','apellido y nombre','apellido y nombres','apellidos y nombre','apellidos y nombres','nombre y apellido','nombre y apellidos','apellido_nombre','personal','agente']);
+  if(joined)return joined;
+  const lastname=field(row,['apellido','apellidos']);
+  const firstname=field(row,['nombre','nombres']);
+  return [lastname,firstname].filter(Boolean).join(' ').trim();
+ }
+ function personLeg(row){
+  const exact=field(row,['leg','legajo','nro legajo','nrolegajo','numero de legajo','número de legajo','legajo n','n legajo','n de legajo']);
+  if(exact)return exact;
+  const candidate=Object.entries(row||{}).find(([key,val])=>(norm(key).includes('legajo')||norm(key).includes('legaj'))&&clean(val));
+  return candidate?clean(candidate[1]):'';
+ }
+ function sheetRole(sheet){
+  const n=norm(sheet);
+  // Una hoja genérica de conducción NO equivale a la función Conductor.
+  if(n.includes('personaldeconduccion')||n.includes('personalconduccion')||n.includes('dotacion')||n.includes('listado')||n.includes('legajos'))return null;
+  return role(sheet);
  }
  async function readFile(file,kind){
   const ext=file.name.toLowerCase().split('.').pop();
@@ -89,7 +118,9 @@ function readH21Overrides0729(){
     const matrix=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:'',raw:false});
     return {sheet:name,rows:matrixObjects(matrix,kind,name)};
    });
-   return {format:'excel',data:null,rows:tabs.flatMap(t=>t.rows.map(row=>({sheet:t.sheet,row})))};
+   const rows=tabs.flatMap(t=>t.rows.map(row=>({sheet:t.sheet,row})));
+   if(!rows.length)throw Error('No se reconocieron tablas de '+kind+' en ninguna hoja. Podés enviar una foto de los encabezados para adaptar el importador.');
+   return {format:'excel',data:null,rows,skipped:tabs.filter(t=>!t.rows.length).map(t=>t.sheet)};
   }
   await loadLibrary('pdfjsLib',['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js']);
   pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -112,27 +143,29 @@ function readH21Overrides0729(){
   return {format:'pdf',data:null,rows:lines};
  }
  function parsePersonal(src){
-  const result={conductor:[],ayudante:[],guarda:[]};
+  const result={conductor:[],ayudante:[],guarda:[]},unassigned={};
   let rejected=0;
-  function add(r,n,l){
-   if(!r||!clean(n)||!clean(l)){rejected++;return}
-   result[r].push({name:clean(n),leg:clean(l)});
+  function add(r,n,l,sheet){
+   if(!clean(n)||!clean(l)){rejected++;return}
+   if(r)result[r].push({name:clean(n),leg:clean(l)});
+   else if(sheet)(unassigned[sheet]||(unassigned[sheet]=[])).push({name:clean(n),leg:clean(l)});
+   else rejected++;
   }
   if(src.format==='json'){
    const data=src.data;
    if(data && !Array.isArray(data) && roleNames.every(k=>Array.isArray(data[k]))){
-    for(const r of roleNames)for(const p of data[r])add(r,field(p,['name','nombre','apellido y nombre','apellido_nombre']),field(p,['leg','legajo','nro legajo']));
+    for(const r of roleNames)for(const p of data[r])add(r,personName(p),personLeg(p));
    }else if(Array.isArray(data)){
-    for(const p of data)add(role(field(p,['rol','cargo','funcion','puesto'])),field(p,['name','nombre','apellido y nombre']),field(p,['leg','legajo']));
+    for(const p of data)add(role(field(p,['rol','cargo','funcion','puesto'])),personName(p),personLeg(p));
    }else throw Error('JSON de personal: se requieren conductor, ayudante y guarda, o una lista con rol, nombre y legajo.');
   }else if(src.format==='excel'){
    for(const {sheet,row} of src.rows){
-    const r=role(field(row,['rol','cargo','funcion','puesto'])||sheet);
-    add(r,field(row,['name','nombre','apellido y nombre','apellidos y nombres','apellido_nombre','personal']),field(row,['leg','legajo','nro legajo','numero de legajo','legajo n']));
+    const r=role(field(row,['rol','cargo','funcion','puesto','categoria','función']))||sheetRole(sheet);
+    add(r,personName(row),personLeg(row),sheet);
    }
   }else{
    for(const {line} of src.rows){
-    let m=/\b(conductor(?:es)?|ayudante(?:s)?|guarda(?:tr[eé]n)?(?:s)?)\b\s*[:\-]?\s+(.+?)\s+(?:leg(?:ajo)?\s*[:#\-]?\s*)?(\d{3,10})\s*$/i.exec(line);
+    const m=/\b(conductor(?:es)?|ayudante(?:s)?|guarda(?:tr[eé]n)?(?:s)?)\b\s*[:\-]?\s+(.+?)\s+(?:leg(?:ajo)?\s*[:#\-]?\s*)?(\d{3,10})\s*$/i.exec(line);
     if(m)add(role(m[1]),m[2],m[3]);
    }
   }
@@ -140,11 +173,12 @@ function readH21Overrides0729(){
    const seen=new Set();
    result[r]=result[r].filter(x=>{const k=norm(x.leg)+'|'+norm(x.name);if(seen.has(k))return false;seen.add(k);return true});
   }
-  const total=roleNames.reduce((n,r)=>n+result[r].length,0);
-  if(!total)throw Error('No se reconoció personal con función, nombre y legajo. No se guardó ningún cambio.');
-  return {kind:'personal',data:result,total,rejected,details:roleNames.map(r=>r+': '+result[r].length).join(' · '),
-   sample:roleNames.flatMap(r=>result[r].slice(0,3).map(x=>r+' · '+x.name+' · leg. '+x.leg)).slice(0,12),
-   warning:'Los roles no encontrados en el archivo se conservan desde la base anterior; los roles presentes se reemplazan después de tu confirmación.'};
+  const classified=roleNames.reduce((n,r)=>n+result[r].length,0);
+  const undecided=Object.values(unassigned).reduce((n,a)=>n+a.length,0);
+  if(!classified&&!undecided)throw Error('No se reconoció personal con nombre y legajo. No se guardó ningún cambio.');
+  return {kind:'personal',data:result,unassigned,roleMapping:{},total:classified+undecided,rejected,details:roleNames.map(r=>r+': '+result[r].length).join(' · ')+' · sin función: '+undecided,
+   sample:[...roleNames.flatMap(r=>result[r].slice(0,2).map(x=>r+' · '+x.name+' · leg. '+x.leg)),...Object.entries(unassigned).flatMap(([sheet,rs])=>rs.slice(0,2).map(x=>'Sin clasificar ('+sheet+'): '+x.name+' · leg. '+x.leg))].slice(0,12),
+   warning:'Antes de guardar hay que asignar la función de las hojas genéricas. Nunca se presume que «Personal de conducción» significa solo Conductor. Si una hoja mezcla conductores y ayudantes sin columna de función, no la asignes completa: se debe separar o indicar la función por fila.'};
  }
  function parseSignals(src){
   const data=[],notes=[],rows=src.format==='json'?(Array.isArray(src.data)?src.data:(src.data&&src.data.senales)||[]):src.rows;
@@ -278,6 +312,18 @@ function readH21Overrides0729(){
   const info=document.createElement('p');info.textContent=file.name+' · '+p.details;target.appendChild(info);
   if(p.rejected){const reject=document.createElement('p');reject.textContent='Atención: '+p.rejected+' filas no pudieron incorporarse.';target.appendChild(reject)}
   const warning=document.createElement('p');warning.textContent=p.warning;target.appendChild(warning);
+  if(p.kind==='personal'&&Object.keys(p.unassigned||{}).length){
+   const box=document.createElement('div');box.className='status';box.style.borderLeftColor='#ab6300';
+   const h=document.createElement('p');h.textContent='Asignación de función pendiente. Solo elegí una función para una hoja si TODOS sus registros pertenecen a la misma función.';box.appendChild(h);
+   for(const [sheet,rows] of Object.entries(p.unassigned)){
+    const label=document.createElement('label');label.textContent='Hoja «'+sheet+'» · '+rows.length+' personas';box.appendChild(label);
+    const select=document.createElement('select');select.style.maxWidth='100%';
+    for(const [value,name] of [['','Sin definir (no guardar)'],['conductor','Todos son CONDUCTORES'],['ayudante','Todos son AYUDANTES'],['guarda','Todos son GUARDATRENES']])select.add(new Option(name,value));
+    select.onchange=()=>{p.roleMapping[sheet]=select.value};
+    box.appendChild(select);
+   }
+   target.appendChild(box);
+  }
   const sample=document.createElement('div');sample.className='small';sample.style.cssText='max-height:250px;overflow:auto;border:1px solid #ddd;padding:8px';
   p.sample.forEach(x=>{const line=document.createElement('div');line.textContent='• '+x;sample.appendChild(line)});target.appendChild(sample);
   const buttons=document.createElement('div');buttons.className='buttons';
@@ -290,6 +336,15 @@ function readH21Overrides0729(){
  function commit(){
   if(!pending)return;
   const {p,file}=pending;
+  let peopleToSave=null;
+  if(p.kind==='personal'){
+   peopleToSave=Object.fromEntries(roleNames.map(r=>[r,p.data[r].slice()]));
+   for(const [sheet,rows] of Object.entries(p.unassigned||{})){
+    const selected=p.roleMapping[sheet];
+    if(!selected){alert('La hoja «'+sheet+'» tiene '+rows.length+' personas sin función asignada. No se guardó nada. Elegí una función SOLO si la hoja es uniforme.');return}
+    peopleToSave[selected].push(...rows);
+   }
+  }
   if(!confirm('¿Verificaste '+p.total+' registros de "'+file.name+'" contra la fuente original y querés guardar los datos reconocidos en este dispositivo?'))return;
   try{
    if(p.kind==='horarios'){
@@ -302,7 +357,7 @@ function readH21Overrides0729(){
     const old=readBases075(),newBase={...old};
     if(p.kind==='personal'){
      const people={...(old.personal||{})};
-     for(const r of roleNames)if(p.data[r].length)people[r]=p.data[r];
+     for(const r of roleNames)if(peopleToSave[r].length)people[r]=[...new Map(peopleToSave[r].map(x=>[norm(x.leg)+'|'+norm(x.name),x])).values()];
      newBase.personal=people;
     }else newBase[p.kind]=p.data;
     localStorage.setItem(BASE075,JSON.stringify(newBase));
