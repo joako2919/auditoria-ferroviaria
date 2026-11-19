@@ -69,7 +69,7 @@ function readH21Overrides0729(){
    const cols=row.map(x=>norm(x));
    if(kind==='personal'){
     const hasLeg=cols.some(x=>x==='leg'||x.includes('legajo')||x.includes('legaj'));
-    const combined=cols.some(x=>x==='name'||x.includes('apellidoynombr')||x.includes('nombreyapellid')||x==='personal'||x==='agente');
+    const combined=cols.some(x=>x==='name'||x.includes('apellidoynombr')||x.includes('apellidosynombr')||x.includes('apellidonombre')||x.includes('apellidosnombres')||x.includes('nombreyapellid')||x==='personal'||x==='agente');
     const separate=cols.some(x=>x==='apellido'||x==='apellidos')&&cols.some(x=>x==='nombre'||x==='nombres');
     return hasLeg&&(combined||separate);
    }
