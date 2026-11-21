@@ -26,15 +26,47 @@
  #printReport0720>p.small{display:none!important}
  #printReport0720{break-before:page;page-break-before:always}
 }
-#h21AuxResult0721{white-space:pre-wrap;line-height:1.5;padding:7px 0}</style></head><body><header><strong>Auditoría Ferroviaria</strong><small>Belgrano Norte · EXPERIMENTAL 0.7.29 · H21 · no reemplaza 0.7.22</small></header><nav class="no-print" style="display:flex;gap:6px;flex-wrap:wrap;padding:9px;position:sticky;top:0;background:white;z-index:10;font-size:13px;border-bottom:1px solid #ddd"><a href="#h21Selector0721">Servicio H21</a><a href="#bases0722">Bases privadas</a><a href="#panel0722">Panel 0.7.22</a><a href="#control076">Recorrido</a><a href="#printGraph0720">Gráficos</a><a href="#printReport0720">Informe</a></nav><main class="wrap" id="inicioAuditoria"><section class="panel no-print" id="autoPanel0728" style="border:2px solid #0b6b78;background:linear-gradient(145deg,#f1fbfa,#ffffff);box-shadow:0 8px 25px #143b4817">
-<h2 style="color:#0b626d;border-color:#0b626d">Registro automático de estaciones · GPS experimental 0.7.29</h2>
+#h21AuxResult0721{white-space:pre-wrap;line-height:1.5;padding:7px 0}</style><style id="integralCss0730">
+#integral0730{border:2px solid #0a6c78;background:#fcfeff}
+#integral0730 .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#integral0730 .cardk{padding:10px;border:1px solid #c7e3ea;border-radius:14px;background:#ecf8fa;text-align:center}
+#integral0730 .cardk b{display:block;color:#134957;font-size:20px;font-variant-numeric:tabular-nums}
+#integral0730 .cardk span{font-size:11px;color:#326372}
+#integral0730 .buttons button{min-height:45px;border-radius:13px}
+#integral0730 .hint{font-size:12px;line-height:1.5}
+#integral0730 .warning{background:#fff8e5;border-left:4px solid #bd8018;padding:10px;border-radius:8px}
+#integral0730 .scroll{overflow:auto;max-height:400px}
+#integral0730 table{border-collapse:collapse;width:100%;font-size:12px;min-width:490px}
+#integral0730 th,#integral0730 td{padding:8px 4px;border-bottom:1px solid #dee9ed;text-align:left}
+#integral0730 th{background:#e6f4f7;position:sticky;top:0}
+#integral0730 svg{width:100%;height:auto;border:1px solid #d8e8eb;background:#fff;border-radius:8px}
+#integral0730 summary{cursor:pointer;padding:10px 0}
+@media(min-width:600px){#integral0730 .cards{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media print{#integral0730{display:none!important}}
+</style></head><body><header><strong>Auditoría Ferroviaria</strong><small>Belgrano Norte · EXPERIMENTAL 0.7.30 INTEGRAL · H21 · no reemplaza 0.7.22</small></header><nav class="no-print" style="display:flex;gap:6px;flex-wrap:wrap;padding:9px;position:sticky;top:0;background:white;z-index:10;font-size:13px;border-bottom:1px solid #ddd"><a href="#h21Selector0721">Servicio H21</a><a href="#bases0722">Bases privadas</a><a href="#integral0730">Control integral</a><a href="#panel0722">Panel 0.7.22</a><a href="#control076">Recorrido</a><a href="#printGraph0720">Gráficos</a><a href="#printReport0720">Informe</a></nav><main class="wrap" id="inicioAuditoria"><section class="panel no-print" id="autoPanel0728" style="border:2px solid #0b6b78;background:linear-gradient(145deg,#f1fbfa,#ffffff);box-shadow:0 8px 25px #143b4817">
+<h2 style="color:#0b626d;border-color:#0b626d">Registro automático de estaciones · GPS experimental 0.7.30</h2>
 <p class="small"><strong>Prueba independiente:</strong> usa claves locales distintas de la versión 0.7.22. No se considera una medición ferroviaria certificada. No utilizar para decisiones de seguridad. La precisión, la pérdida de señal y la geocerca pueden afectar las horas registradas.</p>
 <p class="small">1. Elegí fecha, sentido y servicio H21 en la sección siguiente. 2. Seleccioná conductor, ayudante, guardatrén y locomotora. 3. Iniciá GPS. Conservá la pantalla abierta y corregí manualmente cualquier evento dudoso.</p>
 <div class="buttons"><button type="button" id="autoStart0728" style="background:#0a6c78;border-radius:13px">▶ Iniciar / reanudar GPS automático</button><button type="button" id="autoClose0728" class="secondary" disabled>◼ Cerrar y archivar auditoría</button><button type="button" id="autoBackup0728" class="light">↧ Exportar respaldo JSON</button></div>
 <div id="autoStatus0728" class="status" style="border-left-color:#0b6b78" aria-live="polite">Sin auditoría automática activa.</div>
 <details><summary><b>Eventos GPS de esta auditoría</b></summary><div id="autoLog0728" class="small">Todavía no hay eventos.</div></details>
 <p class="small">Aristóbulo del Valle está incluida: zona de estación ampliada para contemplar la plataforma extensa y la posible pérdida de señal en el túnel. La hora automática siempre debe validarse durante las pruebas.</p></section><section id="printCover0720"><h1>Informe de auditoría de circulación ferroviaria</h1><div class="coverSub">Línea Belgrano Norte · Registro operativo</div><div class="coverGrid" id="coverGrid0720"></div><div class="coverNote">Documento generado desde los registros disponibles en este navegador. Las observaciones y los horarios requieren verificación por el inspector. Las proyecciones son orientativas; no constituyen autorización ni instrucción de circulación.</div></section><div class="panel no-print"><div id="connect" class="status">Guardado local disponible. Sin sincronización remota.</div><div class="small">No utilizar como sistema de seguridad ni para decisiones de circulación. Señales y velocidades aún no validadas.</div></div>
-<section class="panel no-print" id="panel0722"><h2>Panel de seguimiento · piloto 0.7.22</h2><p class="small">La aplicación guarda los datos en este navegador. No publica personal, registros ni boletines en GitHub. Las velocidades GPS, distancias y proyecciones son observaciones orientativas; no sustituyen comprobaciones ferroviarias oficiales.</p>
+<section class="panel no-print" id="integral0730">
+<h2>Control integral · H21 / GPS / velocidades</h2>
+<p class="warning hint"><b>Prueba de auditoría, NO sistema de seguridad ferroviaria.</b> Se reconocen las 23 estaciones GPS; entre estaciones, los PK son estimaciones geométricas, no una traza calibrada. Todos los avisos son orientativos y requieren cotejo del auditor con el itinerario, boletín y carteles de vía.</p>
+<div class="cards"><div class="cardk"><b id="kStation0730">0 / 23</b><span>Estaciones observadas</span></div><div class="cardk"><b id="kDelay0730">—</b><span>Última diferencia H21</span></div><div class="cardk"><b id="kDwell0730">—</b><span>Última permanencia</span></div><div class="cardk"><b id="kStops0730">0</b><span>Paradas fuera de estación GPS</span></div></div>
+<div id="pkState0730" class="status" aria-live="polite">PK estimado: esperando GPS. Calidad y sentido sujetos a comprobación.</div>
+<div class="row"><div><label for="manualPk0730">PK corroborado (opcional)</label><input id="manualPk0730" placeholder="31/480" inputmode="text"></div><div><label for="pkPoint0730">Referencia kilométrica consultable</label><select id="pkPoint0730"><option value="">Elegir referencia H21/PK</option></select></div></div>
+<p class="hint">Las referencias entre estaciones proceden de la tabla disponible en la aplicación. Las marcadas «pendiente validación» no pueden usarse como posición GPS confirmada. El PK manual se utiliza 60 segundos, luego vuelve la estimación.</p>
+<div class="buttons"><button type="button" id="setPk0730">Usar PK manual 60 s</button><button type="button" id="toggleSound0730" class="secondary">Activar avisos de ENSAYO</button><button type="button" class="light" id="testSound0730">Probar sonido/vibración</button></div>
+<label style="font-weight:500"><input type="checkbox" style="width:auto" id="verifyBulletin0730"> Verifiqué manualmente la vigencia y los límites del boletín provisorio utilizado en este servicio.</label>
+<div id="permanent0730" class="status">Velocidades permanentes: 29 reglas del H21 incorporadas como base independiente. Las condiciones especiales requieren comprobación manual.</div>
+<div id="provisional0730" class="status">Provisorias: importar PDF, Excel o JSON y verificar boletín antes de evaluar.</div>
+<div id="notice0730" class="status">Avisos automáticos de ensayo desactivados. Pueden habilitarse con el botón.</div>
+<details open><summary><b>Horario real / H21, permanencia, adelantos y retrasos</b></summary><div class="scroll"><table><thead><tr><th>Estación</th><th>Llegada</th><th>Partida</th><th>Permanencia</th><th>Diferencia H21</th></tr></thead><tbody id="dwellRows0730"><tr><td colspan="5">Sin movimientos todavía</td></tr></tbody></table></div></details>
+<details open><summary><b>Gráfico estadístico · diferencia real frente a H21</b></summary><svg id="stats0730" viewBox="0 0 640 180" role="img" aria-label="Diferencias de horarios, positivas: demoras"></svg><p id="statsLabel0730" class="hint">Esperando datos del servicio.</p></details>
+<p class="hint">Los registros se separan por auditoría mediante auditId y conservan los controles manuales. Las bases privadas se guardan solo en el navegador, no en GitHub. El GPS del navegador puede detenerse cuando la pantalla se bloquea.</p>
+</section><section class="panel no-print" id="panel0722"><h2>Panel de seguimiento · piloto 0.7.22</h2><p class="small">La aplicación guarda los datos en este navegador. No publica personal, registros ni boletines en GitHub. Las velocidades GPS, distancias y proyecciones son observaciones orientativas; no sustituyen comprobaciones ferroviarias oficiales.</p>
 <div class="row"><div class="status">Tren: <b id="v22Train">Sin seleccionar</b></div><div class="status">Movimientos registrados: <b id="v22Moves">0</b></div></div>
 <div class="row"><div class="status">Velocidad GPS: <b id="v22Gps">Sin lectura</b></div><div class="status">Precaución seleccionada: <b id="v22Limit">Sin validar</b></div></div>
 <p id="v22SpeedStatus" class="status">Para cotejar velocidad, iniciá el GPS y seleccioná un límite de precaución validado.</p>
@@ -1485,4 +1517,164 @@ function readH21Overrides0729(){
  }
 })();
 
-</script></body></html>
+</script><script type="application/json" id="permanentJSON0730">[{"id":"ASC-G01","via":"ascendente","pk_desde":"0/000","pk_hasta":"11/000","max_pasajeros_kmh":90,"max_cargas_kmh":40,"categoria":"general","condicion":"siempre","causa":"","nota_validacion":""},{"id":"ASC-E01","via":"ascendente","pk_desde":"0/000","pk_hasta":"0/250","max_pasajeros_kmh":20,"max_cargas_kmh":12,"categoria":"excepcion","condicion":"siempre","causa":"Salida de zona de andenes est. Retiro","nota_validacion":""},{"id":"ASC-E02","via":"ascendente","pk_desde":"0/250","pk_hasta":"1/100","max_pasajeros_kmh":null,"max_cargas_kmh":15,"categoria":"excepcion","condicion":"solo_cargas","causa":"Salida Parrilla Estación - SOLO CARGAS","nota_validacion":"La celda de pasajeros está en blanco en el original; no completar."},{"id":"ASC-E03","via":"ascendente","pk_desde":"2/450","pk_hasta":"2/650","max_pasajeros_kmh":50,"max_cargas_kmh":30,"categoria":"excepcion","condicion":"siempre","causa":"Curva de radio reducido","nota_validacion":""},{"id":"ASC-E04","via":"ascendente","pk_desde":"3/100","pk_hasta":null,"max_pasajeros_kmh":20,"max_cargas_kmh":15,"categoria":"excepcion","condicion":"solo_entrada_salida_playa_retiro_n","causa":"Solo al entrar o salir de Playa Retiro N.","nota_validacion":"El documento indica «..» en PK hasta; no deducir un rango."},{"id":"ASC-E05","via":"ascendente","pk_desde":"9/000","pk_hasta":"9/350","max_pasajeros_kmh":65,"max_cargas_kmh":30,"categoria":"excepcion","condicion":"siempre","causa":"Curva y Contracurva","nota_validacion":""},{"id":"ASC-E06","via":"ascendente","pk_desde":"10/500","pk_hasta":"11/000","max_pasajeros_kmh":65,"max_cargas_kmh":30,"categoria":"excepcion","condicion":"siempre","causa":"Zona de Puentes en curva","nota_validacion":""},{"id":"ASC-G02","via":"ascendente","pk_desde":"11/000","pk_hasta":"18/300","max_pasajeros_kmh":70,"max_cargas_kmh":30,"categoria":"general","condicion":"siempre","causa":"","nota_validacion":""},{"id":"ASC-G03","via":"ascendente","pk_desde":"18/300","pk_hasta":"52/000","max_pasajeros_kmh":90,"max_cargas_kmh":40,"categoria":"general","condicion":"siempre","causa":"","nota_validacion":""},{"id":"ASC-E07","via":"ascendente","pk_desde":"21/200","pk_hasta":null,"max_pasajeros_kmh":12,"max_cargas_kmh":12,"categoria":"excepcion","condicion":"solo_entrada_salida_playa_boulogne","causa":"Solo al entrar o salir de Playa Boulogne","nota_validacion":"El documento indica «..» en PK hasta; no deducir un rango."},{"id":"ASC-E08","via":"ascendente","pk_desde":"23/500","pk_hasta":"25/500","max_pasajeros_kmh":80,"max_cargas_kmh":40,"categoria":"excepcion","condicion":"siempre","causa":"Zona de puentes","nota_validacion":""},{"id":"ASC-E09","via":"ascendente","pk_desde":"28/500","pk_hasta":"28/550","max_pasajeros_kmh":20,"max_cargas_kmh":20,"categoria":"excepcion","condicion":"solo_trenes_sin_parada_don_torcuato","causa":"Sólo trenes sin parada en Est. Don Torcuato","nota_validacion":""},{"id":"DES-G01","via":"descendente","pk_desde":"52/000","pk_hasta":"18/300","max_pasajeros_kmh":90,"max_cargas_kmh":40,"categoria":"general","condicion":"siempre","causa":"","nota_validacion":""},{"id":"DES-E01","via":"descendente","pk_desde":"25/200","pk_hasta":"23/500","max_pasajeros_kmh":80,"max_cargas_kmh":40,"categoria":"excepcion","condicion":"siempre","causa":"Zona de puentes","nota_validacion":""},{"id":"DES-E02","via":"descendente","pk_desde":"21/340","pk_hasta":"21/090","max_pasajeros_kmh":30,"max_cargas_kmh":30,"categoria":"excepcion","condicion":"siempre","causa":"Paso peatonal de intenso tránsito","nota_validacion":""},{"id":"DES-E03","via":"descendente","pk_desde":"21/200","pk_hasta":null,"max_pasajeros_kmh":12,"max_cargas_kmh":12,"categoria":"excepcion","condicion":"solo_entrada_salida_playa_boulogne","causa":"Solo al entrar o salir de Playa Boulogne","nota_validacion":"El documento indica «..» en PK hasta; no deducir un rango."},{"id":"DES-G02","via":"descendente","pk_desde":"18/300","pk_hasta":"11/000","max_pasajeros_kmh":70,"max_cargas_kmh":30,"categoria":"general","condicion":"siempre","causa":"","nota_validacion":""},{"id":"DES-G03","via":"descendente","pk_desde":"11/000","pk_hasta":"0/000","max_pasajeros_kmh":90,"max_cargas_kmh":40,"categoria":"general","condicion":"siempre","causa":"","nota_validacion":""},{"id":"DES-E04","via":"descendente","pk_desde":"11/000","pk_hasta":"10/500","max_pasajeros_kmh":65,"max_cargas_kmh":30,"categoria":"excepcion","condicion":"siempre","causa":"Zona de puentes en curvas","nota_validacion":""},{"id":"DES-E05","via":"descendente","pk_desde":"9/350","pk_hasta":"9/000","max_pasajeros_kmh":65,"max_cargas_kmh":30,"categoria":"excepcion","condicion":"siempre","causa":"Curva y Contracurva","nota_validacion":""},{"id":"DES-E06","via":"descendente","pk_desde":"3/100","pk_hasta":null,"max_pasajeros_kmh":20,"max_cargas_kmh":15,"categoria":"excepcion","condicion":"solo_entrada_salida_playa_retiro_n","causa":"Solo al entrar o salir de Playa Retiro N.","nota_validacion":"El documento indica «..» en PK hasta; no deducir un rango."},{"id":"DES-E07","via":"descendente","pk_desde":"2/650","pk_hasta":"2/450","max_pasajeros_kmh":50,"max_cargas_kmh":30,"categoria":"excepcion","condicion":"siempre","causa":"Curva de radio reducido","nota_validacion":""},{"id":"DES-E08","via":"descendente","pk_desde":"1/100","pk_hasta":"0/600","max_pasajeros_kmh":60,"max_cargas_kmh":15,"categoria":"excepcion","condicion":"siempre","causa":"Entrada a Parrilla Est. Retiro","nota_validacion":""},{"id":"DES-E09","via":"descendente","pk_desde":"0/600","pk_hasta":"0/300","max_pasajeros_kmh":40,"max_cargas_kmh":15,"categoria":"excepcion","condicion":"siempre","causa":"Circulación por Parrilla Est. Retiro","nota_validacion":""},{"id":"DES-E10","via":"descendente","pk_desde":"0/300","pk_hasta":"0/200","max_pasajeros_kmh":20,"max_cargas_kmh":15,"categoria":"excepcion","condicion":"siempre","causa":"Proximidad andenes","nota_validacion":""},{"id":"DES-E11","via":"descendente","pk_desde":"0/200","pk_hasta":"0/000","max_pasajeros_kmh":12,"max_cargas_kmh":12,"categoria":"excepcion","condicion":"andenes_retiro_1_al_5","causa":"Entrada zona de andenes N°1 al 5 est. Retiro","nota_validacion":""},{"id":"DES-E12","via":"descendente","pk_desde":"0/200","pk_hasta":"0/000","max_pasajeros_kmh":5,"max_cargas_kmh":5,"categoria":"excepcion","condicion":"anden_retiro_6","causa":"Entrada zona de andén N°6 est. Retiro","nota_validacion":""},{"id":"UNI-G01","via":"unica","pk_desde":"52/000","pk_hasta":"54/320","max_pasajeros_kmh":null,"max_cargas_kmh":12,"categoria":"especial","condicion":"solo_cargas","causa":"No se considera circulación de trenes de pasajeros","nota_validacion":"No aplicar a pasajeros, ya que figura sin valor en el itinerario."},{"id":"GLO-E01","via":"toda_la_linea","pk_desde":null,"pk_hasta":null,"max_pasajeros_kmh":30,"max_cargas_kmh":30,"categoria":"especial","condicion":"solo_cambio_al_desvio","causa":"Todo cambio tomado al desvío: velocidad máxima 30 km/h.","nota_validacion":"No usar como límite de vía general; depende de toma de desvío."}]</script><script id="integralH21GPS0730">
+(function(){
+'use strict';
+const q=x=>document.getElementById(x);
+const refs=JSON.parse(document.getElementById('permanentJSON0730').textContent);
+const pkm=x=>{const m=/^(\d{1,3})\s*[/+]\s*(\d{3})$/.exec(String(x??'').trim());return m?Number(m[1])*1000+Number(m[2]):null};
+const pkt=x=>Number.isFinite(x)?Math.floor(x/1000)+'/'+String(Math.round(x)%1000).padStart(3,'0'):'sin PK';
+const es=x=>String(x??'').replace(/[&<>"']/g,a=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[a]));
+const mark=x=>x==null?'—':(x>0?'+':'')+Math.round(x)+' s';
+const rad=Math.PI/180;
+let last=0,manual=null,stopped=null,audio=false;
+const seen=new Set(),streak={};
+const active=()=>window.AuditoriaGPS0728?.getActive?.();
+const places=()=>window.AuditoriaGPS0728?.stations||[];
+function distance(a,b){
+ const y=(a.lat+b.lat)*.5*rad;
+ return Math.hypot((b.lat-a.lat)*111194.9,(b.lon-a.lon)*111194.9*Math.cos(y));
+}
+function location(p){
+ if(manual&&p.time-manual.t<60000)return {pk:manual.pk,accuracy:20,kind:'PK MANUAL',segment:'Referencia indicada por auditor'};
+ const list=places(); if(list.length!==23||p.accuracy>35)return null;
+ let best=null;
+ for(let i=0;i<list.length-1;i++){
+  const a=list[i],b=list[i+1],cos=Math.cos((a.lat+b.lat)*rad/2);
+  const dx=(b.lon-a.lon)*111194.9*cos,dy=(b.lat-a.lat)*111194.9;
+  const gx=(p.lon-a.lon)*111194.9*cos,gy=(p.lat-a.lat)*111194.9;
+  const t=Math.max(0,Math.min(1,(gx*dx+gy*dy)/(dx*dx+dy*dy)));
+  const off=Math.hypot(gx-t*dx,gy-t*dy);
+  if(!best||off<best.off)best={pk:a.pk+(b.pk-a.pk)*t,off,accuracy:Math.round(p.accuracy+off+Math.min(500,.065*Math.hypot(dx,dy))),kind:'PK APROXIMADO',segment:a.name+' - '+b.name};
+ }
+ return best&&best.off<=180?best:null;
+}
+function direction(){return q('direction076').value==='desc'?'desc':'asc'}
+function matchway(x){const s=String(x||'').toLowerCase();return /asc|impar/.test(s)?'asc':/desc|par/.test(s)?'desc':null}
+function provisional(){
+ try{return readBases075().velocidades||[]}catch(e){return []}
+}
+function limit(pk){
+ const road=direction()==='asc'?'ascendente':'descendente';
+ return refs.filter(x=>x.via===road&&x.condicion==='siempre'&&Number.isFinite(x.max_pasajeros_kmh)&&pkm(x.pk_desde)!==null&&pkm(x.pk_hasta)!==null&&pk>=Math.min(pkm(x.pk_desde),pkm(x.pk_hasta))&&pk<=Math.max(pkm(x.pk_desde),pkm(x.pk_hasta))).sort((a,b)=>a.max_pasajeros_kmh-b.max_pasajeros_kmh)[0]||null;
+}
+function sound(){
+ try{if(typeof beep076==='function')beep076()}catch(e){}
+ try{navigator.vibrate?.([180,90,180])}catch(e){}
+}
+function say(message,key,beep){
+ if(key&&seen.has(key))return;
+ if(key)seen.add(key);
+ q('notice0730').textContent=message;
+ if(beep&&audio)sound();
+}
+function evaluate(p,pos){
+ q('pkState0730').textContent=pos?'PK '+pkt(pos.pk)+' · '+pos.kind+' · margen de incertidumbre estimado ±'+pos.accuracy+' m · '+pos.segment:'PK no determinado: GPS impreciso o fuera de la proyección entre estaciones. Usar PK manual si corresponde.';
+ const a=active();if(!a||a.state!=='en_curso'||!pos)return;
+ const speed=Number.isFinite(p.speed)&&p.speed>=0?p.speed*3.6:null,pk=pos.pk;
+ const fixed=limit(pk);
+ q('permanent0730').textContent=fixed?'Velocidad H21 pasajero, solo condición ordinaria: '+fixed.max_pasajeros_kmh+' km/h · '+fixed.id+' · '+(fixed.causa||'tramo general')+' (documental, no aviso de seguridad).':'Sin regla permanente incondicional verificable para el PK estimado y sentido actual.';
+ if(fixed&&speed!==null){
+  const key=a.id+':perm:'+fixed.id;
+  streak[key]=speed>fixed.max_pasajeros_kmh+5?(streak[key]||0)+1:0;
+  if(streak[key]>=3)say('Posible exceso H21 (ENSAYO): GPS '+speed.toFixed(1)+' km/h, referencia '+fixed.max_pasajeros_kmh+' km/h. Verificar contexto, calidad GPS y límite vigente.',key,true);
+ }
+ const pro=provisional();
+ const verify=q('verifyBulletin0730').checked;
+ q('provisional0730').textContent='Provisorias cargadas: '+pro.length+' · '+(verify?'boletín cotejado manualmente':'boletín todavía NO cotejado para este servicio')+'.';
+ if(!verify)return;
+ const usable=pos.kind==='PK MANUAL'||pos.accuracy<=260;
+ if(!usable)return;
+ const dir=direction();
+ pro.forEach((r,i)=>{
+  const inicio=pkm(r.inicio||r.pk),fin=pkm(r.fin),v=Number(r.velocidad);
+  if(matchway(r.via||r.sentido||r.direccion)!==dir||inicio===null||fin===null||!Number.isFinite(v)||v<=0)return;
+  const delta=(inicio-pk)*(dir==='asc'?1:-1);
+  if(delta>=0&&delta<=1200){
+   const band=delta<=800?'800 m':'1.200 m';
+   say('AVISO EXPERIMENTAL a '+Math.round(delta)+' m del inicio '+pkt(inicio)+'; tramo de aviso '+band+', precaución '+v+' km/h. Controlar cartel, boletín y punto real.',a.id+':aviso:'+i+':'+band,true);
+  }
+  if(pk>=Math.min(inicio,fin)&&pk<=Math.max(inicio,fin)&&speed!==null){
+   const key=a.id+':prov:'+i;
+   streak[key]=speed>v+5?(streak[key]||0)+1:0;
+   if(streak[key]>=3)say('Posible exceso de precaución provisoria (ENSAYO): '+speed.toFixed(1)+' vs '+v+' km/h. Comprobar con documentación vigente.',key,true);
+  }
+ });
+}
+function checkStop(p,pos){
+ const a=active();if(!a||a.state!=='en_curso'){stopped=null;return}
+ const v=p.speed; if(!Number.isFinite(v)||p.accuracy>35)return;
+ const nearest=Math.min(...places().map(s=>distance(s,p)));
+ if(v<=.5&&nearest>300){
+  if(!stopped||stopped.id!==a.id)stopped={id:a.id,from:p.time,pk:pos?.pk,evt:null};
+  if(p.time-stopped.from>=10000){
+   if(!stopped.evt){
+    stopped.evt={kind:'detencion',type:'extraordinaria',auditId:a.id,start:stopped.from,end:p.time,duration:Math.round((p.time-stopped.from)/1000),planned:null,place:pos?'PK '+pkt(pos.pk)+' (estimación GPS)':'Fuera de estación (GPS)',reason:'Detención GPS experimental; verificar duración, referencia y causa.'};
+    state.events.push(stopped.evt);
+    say('Posible detención fuera de estación mayor a 10 segundos. Registrar motivo y confirmar horario.',a.id+':stop:'+stopped.from,false);
+   }
+   stopped.evt.end=p.time;stopped.evt.duration=Math.round((p.time-stopped.from)/1000);
+   if(typeof save==='function')save();
+  }
+ }else if(stopped){
+  if(stopped.evt){
+   stopped.evt.end=p.time;
+   stopped.evt.duration=Math.round((p.time-stopped.from)/1000);
+   if(typeof save==='function')save();
+  }
+  stopped=null;
+ }
+}
+function updateStats(){
+ const a=active(),id=a?.id;
+ const rows=(typeof records076==='undefined'?[]:records076).filter(x=>x.kind==='movimiento076'&&(!id||x.auditId===id));
+ const names=new Map();
+ rows.forEach(r=>{if(!names.has(r.station))names.set(r.station,{});names.get(r.station)[r.move]=r});
+ const sorted=places().filter(st=>names.has(st.name)).map(st=>[st.name,names.get(st.name)]);
+ let latestDwell=null,lastDelay=null,early=0,late=0;
+ q('dwellRows0730').innerHTML=sorted.map(([name,ev])=>{
+  const arr=ev.llegada,dep=ev.partida;
+  const dwell=arr&&dep?Math.round((dep.time-arr.time)/1000):null;
+  const pDwell=arr?.planned&&dep?.planned?((secs076(dep.planned)-secs076(arr.planned)+86400)%86400):null;
+  if(dwell!==null)latestDwell=dwell;
+  if(dep&&typeof dep.diff==='number'){lastDelay=dep.diff;if(dep.diff<0)early++;if(dep.diff>0)late++}
+  return '<tr><td>'+es(name)+'</td><td>'+es(arr?.actual||'—')+'</td><td>'+es(dep?.actual||'—')+'</td><td>'+(dwell===null?'—':dwell+' s'+(pDwell===null?'':' ('+mark(dwell-pDwell)+' vs H21)'))+'</td><td>'+mark(dep?.diff??arr?.diff)+'</td></tr>';
+ }).join('')||'<tr><td colspan="5">Todavía no hay registros reales.</td></tr>';
+ q('kStation0730').textContent=names.size+' / 23';
+ q('kDelay0730').textContent=mark(lastDelay);
+ q('kDwell0730').textContent=latestDwell===null?'—':latestDwell+' s';
+ const stops=(state.events||[]).filter(x=>x.auditId===id&&x.kind==='detencion'&&/Detención GPS experimental/.test(x.reason||''));
+ q('kStops0730').textContent=String(stops.length);
+ q('statsLabel0730').textContent='Movimientos: '+rows.length+' · Partidas adelantadas: '+early+' · Partidas demoradas: '+late+' · Valores GPS sujetos a revisión.';
+ const values=rows.filter(x=>Number.isFinite(x.diff));
+ if(!values.length){q('stats0730').innerHTML='<text x="30" y="90" font-size="16" fill="#555">Esperando horarios reales del servicio.</text>';return}
+ const max=Math.max(60,...values.map(v=>Math.abs(v.diff))),scale=75/max,bar=Math.max(4,570/values.length);
+ q('stats0730').innerHTML='<line x1="45" y1="90" x2="625" y2="90" stroke="#4b5563"/>'+
+ values.map((x,i)=>{const x0=48+bar*i,h=Math.max(1,Math.abs(x.diff)*scale),y=x.diff<0?90-h:90,color=x.diff<0?'#168c8b':'#c43d3d';return '<rect x="'+x0+'" y="'+y+'" width="'+Math.max(2,bar-2)+'" height="'+h+'" fill="'+color+'"><title>'+es(x.station)+' '+es(x.move)+': '+mark(x.diff)+'</title></rect>'}).join('')+
+ '<text x="4" y="20" font-size="12">Adelanto</text><text x="4" y="167" font-size="12">Atraso</text>';
+}
+if(typeof REFS!=='undefined'){
+ const unique=new Set();
+ for(const ref of REFS){
+  const k=ref.km+' '+ref.name;if(unique.has(k))continue;unique.add(k);
+  q('pkPoint0730').add(new Option(ref.km+' · '+ref.name,ref.km));
+ }
+}
+q('setPk0730').onclick=()=>{
+ const pk=pkm(q('manualPk0730').value)||pkm(q('pkPoint0730').value);
+ if(pk===null){alert('Ingresá un PK válido, por ejemplo 31/480.');return;}
+ manual={pk,t:Date.now()};q('pkState0730').textContent='PK MANUAL '+pkt(pk)+' · referencia aportada para los próximos 60 s.';
+};
+q('toggleSound0730').onclick=()=>{audio=!audio;q('toggleSound0730').textContent=audio?'Avisos de ENSAYO activados':'Activar avisos de ENSAYO';q('notice0730').textContent=audio?'Avisos sonoros/vibratorios de ensayo activados, NO oficiales.':'Avisos automáticos de ensayo desactivados.'};
+q('testSound0730').onclick=()=>{sound();q('notice0730').textContent='Se solicitó la prueba sonora/vibratoria al dispositivo.'};
+setInterval(()=>{
+ try{
+  const p=typeof lastGps076!=='undefined'?lastGps076:null,a=active();
+  if(p&&a?.state==='en_curso'&&p.time>last&&Date.now()-p.time<18000){
+   last=p.time;const pos=location(p);
+   evaluate(p,pos);checkStop(p,pos);
+  }
+  updateStats();
+ }catch(err){q('pkState0730').textContent='Error en panel experimental: '+err.message+'. Control manual disponible.'}
+},1600);
+})();</script></body></html>
