@@ -60,7 +60,7 @@
 <p class="hint">Las referencias entre estaciones proceden de la tabla disponible en la aplicación. Las marcadas «pendiente validación» no pueden usarse como posición GPS confirmada. El PK manual se utiliza 60 segundos, luego vuelve la estimación.</p>
 <div class="buttons"><button type="button" id="setPk0730">Usar PK manual 60 s</button><button type="button" id="toggleSound0730" class="secondary">Activar avisos de ENSAYO</button><button type="button" class="light" id="testSound0730">Probar sonido/vibración</button></div>
 <label style="font-weight:500"><input type="checkbox" style="width:auto" id="verifyBulletin0730"> Verifiqué manualmente la vigencia y los límites del boletín provisorio utilizado en este servicio.</label>
-<div id="permanent0730" class="status">Velocidades permanentes: 29 reglas del H21 incorporadas como base independiente. Las condiciones especiales requieren comprobación manual.</div>
+<div id="speedComparison0732" class="status" role="status">Velocidad GPS real: sin lectura reciente. Límite aplicable: pendiente de PK corroborado.</div><div class="scroll"><svg id="speedChart0732" viewBox="0 0 640 180" role="img" aria-label="Comparación experimental de velocidad GPS y límite documental H21"></svg></div><div id="permanent0730" class="status">Velocidades permanentes: 29 reglas del H21 incorporadas como base independiente. Las condiciones especiales requieren comprobación manual.</div>
 <div id="provisional0730" class="status">Provisorias: importar PDF, Excel o JSON y verificar boletín antes de evaluar.</div>
 <div id="notice0730" class="status">Avisos automáticos de ensayo desactivados. Pueden habilitarse con el botón.</div>
 <details open><summary><b>Horario real / H21, permanencia, adelantos y retrasos</b></summary><div class="scroll"><table><thead><tr><th>Estación</th><th>Llegada</th><th>Partida</th><th>Permanencia</th><th>Diferencia H21</th></tr></thead><tbody id="dwellRows0730"><tr><td colspan="5">Sin movimientos todavía</td></tr></tbody></table></div></details>
@@ -1579,7 +1579,28 @@ function location(p){
 function direction(){return q('direction076').value==='desc'?'desc':'asc'}
 function matchway(x){const s=String(x||'').toLowerCase();return /asc|impar/.test(s)?'asc':/desc|par/.test(s)?'desc':null}
 function provisional(){
- try{return readBases075().velocidades||[]}catch(e){return []}
+ const base=(()=>{try{return readBases075()?.velocidades||[]}catch(e){return []}})();
+ const bulletin=typeof vigente080==='function'?vigente080():null;
+ const rows=bulletin&&Array.isArray(bulletin.registros)?bulletin.registros:[];
+ const active=rows.filter(x=>x.tipo==='precaucion_velocidad'&&Number(x.velocidad)>0).map(x=>({...x,source:'boletin',archivo:bulletin.archivo,fechaBoletin:bulletin.fecha,nota:'Boletín importado; confirmar vigencia para cada auditoría'}));
+ const manual=base.filter(x=>Number(x.velocidad)>0).map(x=>({...x,source:'base-privada'}));
+ return [...active,...manual];
+}
+const speedSeries0732=[];
+function drawSpeed0732(){
+ const svg=q('speedChart0732'); if(!svg)return;
+ if(speedSeries0732.length<2){svg.innerHTML='<text x="20" y="95" font-size="15" fill="#475569">Esperando mediciones GPS consecutivas...</text>';return;}
+ const rows=speedSeries0732.slice(-45),max=Math.max(90,...rows.map(x=>Math.max(x.gps||0,x.limit||0)))*1.15;
+ const X=i=>46+i/Math.max(1,rows.length-1)*562,Y=v=>145-Math.min(max,Math.max(0,v))/max*113;
+ const line=(field,color)=>'<polyline points="'+rows.map((x,i)=>X(i)+','+Y(x[field]||0)).join(' ')+'" fill="none" stroke="'+color+'" stroke-width="3" stroke-linejoin="round"/>';
+ svg.innerHTML='<rect width="640" height="180" fill="#fff"/><line x1="46" y1="145" x2="608" y2="145" stroke="#94a3b8"/><line x1="46" y1="32" x2="608" y2="32" stroke="#e2e8f0" stroke-dasharray="4 3"/>'+line('gps','#0b6b78')+line('limit','#b51220')+'<text x="48" y="15" font-size="13" fill="#0b6b78">GPS observado</text><text x="254" y="15" font-size="13" fill="#b51220">Límite H21 referencial</text><text x="4" y="145" font-size="11">'+Math.round(0)+'</text><text x="4" y="36" font-size="11">'+Math.round(max)+'</text>';
+}
+function logSpeed0732(a,key,speed,limitValue,p,pk,pos,source,label){
+ if(seen.has(key))return;
+ const loc=pkt(pk),uncertainty=Math.round(pos?.accuracy||p.accuracy||999);
+ const report='POSIBLE exceso de velocidad GPS (ENSAYO, pendiente de verificar): '+speed.toFixed(1)+' km/h frente a referencia '+limitValue+' km/h ('+label+'); PK estimado '+loc+', incertidumbre aprox. ±'+uncertainty+' m; cotejar vía, sentido, vigencia y documentos originales antes de concluir.';
+ const evt={kind:'novedad',time:p.time||Date.now(),auditId:a.id,place:'PK '+loc+' (estimado)',reason:report,source:'gps-velocidad-0732-experimental',automatic:true,reviewStatus:'pendiente-de-verificacion',limitValue,speedKmh:Number(speed.toFixed(1)),accuracyM:uncertainty,reference:source,gps:{lat:p.lat,lon:p.lon,accuracy:p.accuracy,time:p.time}};
+ try{state.events.push(evt);if(typeof save==='function')save();say('Registro experimental guardado: '+report,key,true)}catch(e){q('notice0730').textContent='No se pudo registrar posible exceso: '+e.message+'; usar observación manual.'}
 }
 function limit(pk){
  const road=direction()==='asc'?'ascendente':'descendente';
@@ -1596,35 +1617,53 @@ function say(message,key,beep){
  if(beep&&audio)sound();
 }
 function evaluate(p,pos){
+ const activeAudit=active();
+ const gpsSpeed=Number.isFinite(p.speed)&&p.speed>=0?p.speed*3.6:null;
+ const base=provisional(),bulletin=typeof vigente080==='function'?vigente080():null;
+ const verified=q('verifyBulletin0730').checked;
+ q('provisional0730').textContent='Restricciones provisorias consultables: '+base.length+' (boletín '+(bulletin?.registros?.filter(x=>x.tipo==='precaucion_velocidad').length||0)+' + base privada). '+(verified?'Vigencia declarada cotejada manualmente en este servicio.':'Vigencia NO cotejada; sin alertas de boletín.')+(bulletin?' · Archivo: '+bulletin.archivo:'');
  q('pkState0730').textContent=pos?'PK '+pkt(pos.pk)+' · '+pos.kind+' · margen de incertidumbre estimado ±'+pos.accuracy+' m · '+pos.segment:'PK no determinado: GPS impreciso o fuera de la proyección entre estaciones. Usar PK manual si corresponde.';
- const a=active();if(!a||a.state!=='en_curso'||!pos)return;
- const speed=Number.isFinite(p.speed)&&p.speed>=0?p.speed*3.6:null,pk=pos.pk;
- const fixed=limit(pk);
- q('permanent0730').textContent=fixed?'Velocidad H21 pasajero, solo condición ordinaria: '+fixed.max_pasajeros_kmh+' km/h · '+fixed.id+' · '+(fixed.causa||'tramo general')+' (documental, no aviso de seguridad).':'Sin regla permanente incondicional verificable para el PK estimado y sentido actual.';
- if(fixed&&speed!==null){
-  const key=a.id+':perm:'+fixed.id;
-  streak[key]=speed>fixed.max_pasajeros_kmh+5?(streak[key]||0)+1:0;
-  if(streak[key]>=3)say('Posible exceso H21 (ENSAYO): GPS '+speed.toFixed(1)+' km/h, referencia '+fixed.max_pasajeros_kmh+' km/h. Verificar contexto, calidad GPS y límite vigente.',key,true);
+ if(!activeAudit||activeAudit.state!=='en_curso'){
+  q('speedComparison0732').textContent='Sin auditoría GPS en curso. Velocidad y límites no evaluados.';
+  return;
  }
- const pro=provisional();
- const verify=q('verifyBulletin0730').checked;
- q('provisional0730').textContent='Provisorias cargadas: '+pro.length+' · '+(verify?'boletín cotejado manualmente':'boletín todavía NO cotejado para este servicio')+'.';
- if(!verify)return;
- const usable=pos.kind==='PK MANUAL'||pos.accuracy<=260;
- if(!usable)return;
+ if(!pos||gpsSpeed===null){
+  q('speedComparison0732').textContent='GPS '+(gpsSpeed===null?'sin velocidad':' '+gpsSpeed.toFixed(1)+' km/h')+' · Sin PK orientativo confiable: no hay comparación de límites.';
+  q('permanent0730').textContent='Sin referencia permanente asignable: no se dispone de PK orientativo.';
+  return;
+ }
+ const pk=pos.pk,fixed=limit(pk);
+ q('permanent0730').textContent=fixed?'Referencia documental H21: '+fixed.max_pasajeros_kmh+' km/h · '+fixed.id+' · '+(fixed.causa||'tramo general')+' · verificación ferroviaria pendiente.':'Sin regla permanente incondicional verificable para el PK estimado y sentido actual.';
  const dir=direction();
- pro.forEach((r,i)=>{
-  const inicio=pkm(r.inicio||r.pk),fin=pkm(r.fin),v=Number(r.velocidad);
-  if(matchway(r.via||r.sentido||r.direccion)!==dir||inicio===null||fin===null||!Number.isFinite(v)||v<=0)return;
-  const delta=(inicio-pk)*(dir==='asc'?1:-1);
+ const validPro=verified?base.filter(x=>{
+  const inicio=pkm(x.inicio||x.pk),fin=pkm(x.fin),v=Number(x.velocidad);
+  return matchway(x.via||x.sentido||x.direccion)===dir&&inicio!==null&&fin!==null&&Number.isFinite(v)&&v>0&&pk>=Math.min(inicio,fin)&&pk<=Math.max(inicio,fin);
+ }):[];
+ const candidates=[...(fixed?[{limit:fixed.max_pasajeros_kmh,source:fixed.id,label:'H21 permanente · '+fixed.id}]:[]),...validPro.map(x=>({limit:Number(x.velocidad),source:x.source==='boletin'?('Boletín '+(x.archivo||'')):'Base provisoria',label:'Provisoria PK '+(x.inicio||x.pk)+' → '+x.fin}))].filter(x=>Number.isFinite(x.limit)&&x.limit>0);
+ candidates.sort((a,b)=>a.limit-b.limit);
+ const reference=candidates[0]||null;
+ const delta=reference?gpsSpeed-reference.limit:null;
+ q('speedComparison0732').textContent='Velocidad GPS: '+gpsSpeed.toFixed(1)+' km/h · Referencia documental aplicable: '+(reference?reference.limit+' km/h ('+reference.label+')':'sin límite cotejable')+' · Diferencia: '+(delta===null?'—':(delta>0?'+':'')+delta.toFixed(1)+' km/h')+' · PK '+pkt(pk)+' (estimación, no homologada).';
+ if(reference){
+  speedSeries0732.push({gps:gpsSpeed,limit:reference.limit,time:p.time});
+  if(speedSeries0732.length>45)speedSeries0732.shift();
+  drawSpeed0732();
+  // No se presume una infracción ni se usa un límite no georreferenciado como orden de conducción.
+  const goodGps=p.accuracy<=35&&pos.kind==='PK APROXIMADO'&&pos.accuracy<=260;
+  for(const ref of candidates){
+   const key=activeAudit.id+':vel:'+ref.source+':'+(ref.label||'');
+   streak[key]=goodGps&&gpsSpeed>ref.limit+5?(streak[key]||0)+1:0;
+   if(streak[key]>=3&&!seen.has(key))logSpeed0732(activeAudit,key,gpsSpeed,ref.limit,p,pk,pos,ref.source,ref.label);
+  }
+ }
+ if(!verified||!pos||pos.accuracy>260)return;
+ base.filter(x=>x.source==='boletin'||x.source==='base-privada').forEach((r,i)=>{
+  const ini=pkm(r.inicio||r.pk),fin=pkm(r.fin);
+  if(matchway(r.via||r.sentido||r.direccion)!==dir||ini===null||fin===null||!Number.isFinite(Number(r.velocidad)))return;
+  const delta=(ini-pk)*(dir==='asc'?1:-1);
   if(delta>=0&&delta<=1200){
    const band=delta<=800?'800 m':'1.200 m';
-   say('AVISO EXPERIMENTAL a '+Math.round(delta)+' m del inicio '+pkt(inicio)+'; tramo de aviso '+band+', precaución '+v+' km/h. Controlar cartel, boletín y punto real.',a.id+':aviso:'+i+':'+band,true);
-  }
-  if(pk>=Math.min(inicio,fin)&&pk<=Math.max(inicio,fin)&&speed!==null){
-   const key=a.id+':prov:'+i;
-   streak[key]=speed>v+5?(streak[key]||0)+1:0;
-   if(streak[key]>=3)say('Posible exceso de precaución provisoria (ENSAYO): '+speed.toFixed(1)+' vs '+v+' km/h. Comprobar con documentación vigente.',key,true);
+   say('AVISO GPS EXPERIMENTAL: aproximación a '+pkt(ini)+' ('+Math.round(delta)+' m), precaución '+r.velocidad+' km/h. Cotejar cartel y vigencia.',activeAudit.id+':aviso:'+r.source+':'+i+':'+band,true);
   }
  });
 }
