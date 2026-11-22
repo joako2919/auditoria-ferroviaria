@@ -67,7 +67,7 @@ main.wrap>*{scroll-margin-top:76px}
 #navMobile0732,.ferro-fold{display:none!important}
 main.wrap>section:not(#printCover0720):not(#printGraph0720):not(#printReport0720){display:none!important}
 }
-</style></head><body><header><strong>Auditoría Ferroviaria</strong><small>Belgrano Norte · EXPERIMENTAL 0.7.32 CANDIDATA · H21 · no reemplaza 0.7.22</small></header><nav class="no-print" id="navMobile0732" aria-label="Navegación principal">
+</style></head><body><header><strong>Auditoría Ferroviaria</strong><small>Belgrano Norte · EXPERIMENTAL 0.7.32 · LECTOR SEÑALES CORREGIDO · H21 · no reemplaza 0.7.22</small></header><nav class="no-print" id="navMobile0732" aria-label="Navegación principal">
 <a href="#h21Selector0721">Servicio</a>
 <a href="#datosAuditoria0732">Dotación</a>
 <a href="#autoPanel0728">GPS</a>
@@ -361,7 +361,12 @@ async function importPrecautions078_DESACTIVADO(ev){
    const content=await (await pdf.getPage(page)).getTextContent();
    const rows=new Map();
    for(const item of content.items){
-    const y=Math.round(item.transform[5]/3)*3;
+    const py=Number(item.transform[5]);
+    // En Señales.pdf el marcador de estado «p» puede tener diferente coordenada
+    // vertical (hasta ~1-3 puntos) que el número, pese a pertenecer al mismo renglón.
+    const y=kind==='senales'
+      ?([...map.keys()].find(z=>Math.abs(z-py)<=4)??py)
+      :Math.round(py/3)*3;
     if(!rows.has(y))rows.set(y,[]);
     rows.get(y).push({x:item.transform[4],text:item.str});
    }
@@ -1354,32 +1359,76 @@ function readH21Overrides0729(){
    warning:'Antes de guardar hay que asignar la función de las hojas genéricas. Nunca se presume que «Personal de conducción» significa solo Conductor. Si una hoja mezcla conductores y ayudantes sin columna de función, no la asignes completa: se debe separar o indicar la función por fila.'};
  }
  function parseSignals(src){
-  const data=[],notes=[],rows=src.format==='json'?(Array.isArray(src.data)?src.data:(src.data&&src.data.senales)||[]):src.rows;
-  if(!Array.isArray(rows))throw Error('El archivo no tiene una lista de señales.');
-  let omitted=0;
-  for(const item of rows){
-   let id='',p='',via='',name='';
+  const rows=src.format==='json'
+    ?(Array.isArray(src.data)?src.data:(src.data&&src.data.senales)||[])
+    :src.rows;
+  if(!Array.isArray(rows))throw Error('El archivo no contiene una lista de señales.');
+  const data=[];
+  let direction='',other=0,malformed=0,missingPK=0;
+  for(let i=0;i<rows.length;i++){
+   const item=rows[i];
+   let id='',p='',station='',desc='',isPrincipal=false,sentido='',pagina='';
    if(src.format==='pdf'){
-    const line=item.line;
-    const mi=/\bP\s*[-.]?\s*\d+[A-Za-z]?\b/i.exec(line);
-    const mp=/\b(?:PK|KM)?\s*(\d{1,3}\s*[/+]\s*\d{3})\b/i.exec(line);
-    if(mi&&mp){id=clean(mi[0]).replace(/\s+/g,'').toUpperCase();p=pk(mp[1]);via='P';name=line;}
+    const line=clean(item.line||'');
+    pagina=clean(item.sheet||'');
+    // La leyenda ASCENDENTE/DESCENDENTE ocupa una página; se arrastra a la siguiente.
+    if(/^\s*ASCENDENTE\s*$/i.test(line)){direction='ascendente';continue}
+    if(/^\s*DESCENDENTE\s*$/i.test(line)){direction='descendente';continue}
+    // "p" es el valor de la columna ESTADO, no el prefijo de señal ni un PK.
+    const marker=/(?:^|\s)p(?=\s|$)/i.exec(line);
+    if(!marker){other++;continue}
+    if(!direction){malformed++;continue}
+    const before=clean(line.slice(0,marker.index));
+    const number=/\b\d{1,3}\b/.exec(before);
+    if(!number){malformed++;continue}
+    // El original incluye 59 I "A", 163 1 D "A", 203 "A" 15 y señales simples 131.
+    id=clean(before.slice(number.index)).toUpperCase();
+    if(!/^\d[0-9A-Z "'\-]{0,34}$/.test(id)){malformed++;continue}
+    // La estación suele estar en una celda vertical a mitad de su grupo.
+    // Solo tomarla cuando está escrita COMPLETA junto a la señal.
+    const prefix=before.slice(0,number.index);
+    const known=/\b(RETIRO|MUNRO|BOULOGNE|DON TORCUATO|LOS POLVORINES|GRAND BOURG|DEL VISO|VILLA ROSA|FLORIDA|SALD[IÍ]AS|VILLA ADELINA)\b/i.exec(prefix);
+    if(known)station=known[1];
+    const km=/\b(?:PK|KM)\s*[:.]?\s*(\d{1,3}\s*[\/+]\s*\d{3})\b/i.exec(line);
+    p=km?pk(km[1]):'';
+    isPrincipal=true;
+    sentido=direction;
+    desc=line;
    }else{
     const x=src.format==='excel'?item.row:item;
-    id=field(x,['id','senal','señal','codigo','identificacion','numero de señal']);
+    id=field(x,['id','senal','señal','codigo','identificacion','numero de señal','señal n°','señal n']);
     p=pk(field(x,['pk','punto kilometrico','punto kilométrico','km','progresiva','ubicacion']));
-    via=field(x,['via','vía','tipo via','tipo de via','tipo','via principal','principal']);
-    name=field(x,['detalle','observacion','descripcion']);
-    if(!via&&/^P[\s-]?\d/i.test(id))via='P';
+    const via=field(x,['via','vía','tipo via','tipo de via','tipo','via principal','principal']);
+    const estado=field(x,['estado','clasificacion','tipo señal','condicion','condición']);
+    isPrincipal=/^(p|principal|viaprincipal)$/i.test(norm(via))||norm(estado)==='p'||/^P[\s-]?\d/i.test(id);
+    station=field(x,['estacion','estación','zona']);
+    sentido=field(x,['sentido','dirección','direccion']);
+    desc=field(x,['detalle','observacion','descripcion']);
    }
-   if(!id||!p||!(/^(p|principal|viaprincipal)$/i.test(norm(via)))){omitted++;continue}
-   data.push({id,pk:p,via:'P',detalle:name});
+   if(!id||!isPrincipal){other++;continue}
+   if(!p)missingPK++;
+   // Cuando la fuente no trae PK, sigue siendo señal P consultable, NO una geocerca.
+   data.push({id:clean(id),pk:p,via:'P',sentido,estacion:station,detalle:desc,
+    pkValidado:!!p,geocercaHabilitada:false,documento:src.format==='pdf'?'PDF':src.format,
+    pagina,fuenteOrden:i+1});
   }
-  const unique=[...new Map(data.map(x=>[norm(x.id)+'|'+x.pk,x])).values()];
-  if(!unique.length)throw Error('No se reconocieron señales de vía principal P con código y PK. No se sustituyó la base.');
-  return {kind:'senales',data:unique,total:unique.length,rejected:omitted,details:unique.length+' señales de vía principal (P), '+omitted+' filas omitidas',
-    sample:unique.slice(0,12).map(x=>x.id+' · PK '+x.pk),
-    warning:'Solo se importan señales identificadas expresamente como vía principal (P). Verificá cada PK contra la planilla original.'};
+  const keys=new Set();
+  const unique=data.filter(x=>{
+   // Preservar señales diferentes con igual número en varias estaciones/sentidos.
+   const key=src.format==='pdf'
+     ?x.pagina+'|'+x.fuenteOrden
+     :norm(x.id)+'|'+norm(x.sentido)+'|'+norm(x.estacion)+'|'+x.pk;
+   if(keys.has(key))return false;
+   keys.add(key);return true;
+  });
+  if(!unique.length)throw Error('No se identificaron señales con estado P. Revisá el PDF y su columna ESTADO. No se sustituyó la base.');
+  const noPK=unique.filter(x=>!x.pk).length;
+  const asc=unique.filter(x=>x.sentido==='ascendente').length;
+  const desc=unique.filter(x=>x.sentido==='descendente').length;
+  return {kind:'senales',data:unique,total:unique.length,rejected:malformed,
+   details:unique.length+' señales P ('+asc+' ascendentes, '+desc+' descendentes) · '+noPK+' sin PK individual; '+other+' filas no P/encabezados excluidos',
+   sample:unique.slice(0,15).map(x=>x.id+' · '+(x.sentido||'sentido por confirmar')+' · '+(x.pk?'PK documental '+x.pk:'PK no consignado')+(x.pagina?' · '+x.pagina:'')),
+   warning:'Solo señales marcadas P en el documento. Si el PDF no da PK individual, quedan para consulta, NO para alertas GPS. Verificá sentido, señal y estado con el documento original antes de confirmar.'};
  }
  function parseSpeeds(src){
   const rows=src.format==='json'?(Array.isArray(src.data)?src.data:(src.data&&src.data.velocidades)||[]):src.rows;
@@ -1481,7 +1530,7 @@ function readH21Overrides0729(){
    (node&&node.parentNode||document.body).insertBefore(target,node?node.nextSibling:null);
   }
   target.replaceChildren();
-  const title=document.createElement('h2');title.textContent='Verificar antes de guardar · 0.7.29';target.appendChild(title);
+  const title=document.createElement('h2');title.textContent='Verificar antes de guardar · 0.7.32';target.appendChild(title);
   const info=document.createElement('p');info.textContent=file.name+' · '+p.details;target.appendChild(info);
   if(p.rejected){const reject=document.createElement('p');reject.textContent='Atención: '+p.rejected+' filas no pudieron incorporarse.';target.appendChild(reject)}
   const warning=document.createElement('p');warning.textContent=p.warning;target.appendChild(warning);
