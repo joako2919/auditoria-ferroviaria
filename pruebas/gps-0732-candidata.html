@@ -1199,7 +1199,7 @@ function readH21Overrides0729(){
   const entries=matrix.filter(row=>Array.isArray(row)&&row.some(x=>clean(x)));
   if(!entries.length)return [];
   const patterns={
-   senales:[['senal','señal','senial','id','codigo','identificacion'],['pk','punto kilometrico','punto kilométrico','km','progresiva','ubicacion']],
+   senales:[['senal','señal','senial','id','codigo','identificacion','señal n°','señal n']],
    velocidades:[['velocidad','vel','kmh','km/h','velocidad maxima','velocidad máxima'],['pk','inicio','desde','progresiva','punto kilometrico','punto kilométrico']],
    horarios:[['estacion','estación','parada','station'],['tren','servicio','nrotren','nro tren','numero tren','llegada','partida','paso','hora salida','hora llegada']]
   };
@@ -1302,9 +1302,13 @@ function readH21Overrides0729(){
     add(r,personName(row),personLeg(row),sheet);
    }
   }else{
-   for(const {line} of src.rows){
-    const m=/\b(conductor(?:es)?|ayudante(?:s)?|guarda(?:tr[eé]n)?(?:s)?)\b\s*[:\-]?\s+(.+?)\s+(?:leg(?:ajo)?\s*[:#\-]?\s*)?(\d{3,10})\s*$/i.exec(line);
-    if(m)add(role(m[1]),m[2],m[3]);
+   // El PDF real LEGAJOS usa columnas LEGAJO | APELLIDO | NOMBRE y NO identifica
+   // por fila la función. Se detectan personas sin asignar conductor/ayudante/guarda.
+   for(const {line,sheet} of src.rows){
+    const explicit=/\b(conductor(?:es)?|ayudante(?:s)?|guarda(?:tr[eé]n)?(?:s)?)\b\s*[:\-]?\s+(.+?)\s+(?:leg(?:ajo)?\s*[:#\-]?\s*)?(\d{3,10})\s*$/i.exec(line);
+    if(explicit){add(role(explicit[1]),explicit[2],explicit[3],sheet);continue;}
+    const m=/^\s*(\d{3,10})\s+([A-Za-zÁÉÍÓÚÜÑáéíóúüñ][A-Za-zÁÉÍÓÚÜÑáéíóúüñ.'\s-]{3,100})$/i.exec(line);
+    if(m)add(null,clean(m[2]),m[1],sheet||'Página sin clasificar');
    }
   }
   for(const r of roleNames){
@@ -1319,32 +1323,46 @@ function readH21Overrides0729(){
    warning:'Antes de guardar hay que asignar la función de las hojas genéricas. Nunca se presume que «Personal de conducción» significa solo Conductor. Si una hoja mezcla conductores y ayudantes sin columna de función, no la asignes completa: se debe separar o indicar la función por fila.'};
  }
  function parseSignals(src){
-  const data=[],notes=[],rows=src.format==='json'?(Array.isArray(src.data)?src.data:(src.data&&src.data.senales)||[]):src.rows;
+  const data=[],rows=src.format==='json'?(Array.isArray(src.data)?src.data:(src.data&&src.data.senales)||[]):src.rows;
   if(!Array.isArray(rows))throw Error('El archivo no tiene una lista de señales.');
-  let omitted=0;
+  let omitted=0,noPK=0;
+  // El relevamiento PDF real incluye SEÑAL N° y columna ESTADO: p, sin PK por señal.
+  // Sólo p explícita equivale a vía principal; no georreferenciar señales sin PK.
   for(const item of rows){
-   let id='',p='',via='',name='';
+   let id='',p='',station='',desc='',isPrincipal=false;
    if(src.format==='pdf'){
-    const line=item.line;
-    const mi=/\bP\s*[-.]?\s*\d+[A-Za-z]?\b/i.exec(line);
-    const mp=/\b(?:PK|KM)?\s*(\d{1,3}\s*[/+]\s*\d{3})\b/i.exec(line);
-    if(mi&&mp){id=clean(mi[0]).replace(/\s+/g,'').toUpperCase();p=pk(mp[1]);via='P';name=line;}
+    const line=clean(item.line||'');
+    const mark=/\s+p(?:\s|$)/i.exec(' '+line);
+    if(!mark){omitted++;continue;}
+    const before=line.slice(0,Math.max(0,mark.index-1)).trim();
+    const m=/\b\d{1,3}(?:\s+\d{1,3})?(?:\s*[ID]\s*["']?[A-Z]["']?)?/i.exec(before);
+    if(!m){omitted++;continue;}
+    id=clean(m[0]).replace(/\s+/g,' ').toUpperCase();
+    isPrincipal=true;
+    desc=line;
+    const stationName=/\b(RETIRO|SALD[IÍ]AS|CIUDAD UNIVERSITARIA|MUNRO|BOULOGNE|DON TORCUATO|GRAND BOURG|VILLA ADELINA|FLORIDA)\b/i.exec(before);
+    station=stationName?stationName[0]:'';
+    const km=/\b(?:PK|KM)\s*[:.]?\s*(\d{1,3}[\/+]\d{3})\b/i.exec(line);
+    p=km?pk(km[1]):'';
    }else{
     const x=src.format==='excel'?item.row:item;
-    id=field(x,['id','senal','señal','codigo','identificacion','numero de señal']);
+    id=field(x,['id','senal','señal','codigo','identificacion','numero de señal','señal n°','señal n']);
     p=pk(field(x,['pk','punto kilometrico','punto kilométrico','km','progresiva','ubicacion']));
-    via=field(x,['via','vía','tipo via','tipo de via','tipo','via principal','principal']);
-    name=field(x,['detalle','observacion','descripcion']);
-    if(!via&&/^P[\s-]?\d/i.test(id))via='P';
+    const via=field(x,['via','vía','tipo via','tipo de via','tipo','via principal','principal']);
+    const estado=field(x,['estado','clasificacion','tipo señal','condicion']);
+    isPrincipal=/^(p|principal|viaprincipal)$/i.test(norm(via))||norm(estado)==='p'||/^P[\s-]?\d/i.test(id);
+    station=field(x,['estacion','estación','zona']);
+    desc=field(x,['detalle','observacion','descripcion']);
    }
-   if(!id||!p||!(/^(p|principal|viaprincipal)$/i.test(norm(via)))){omitted++;continue}
-   data.push({id,pk:p,via:'P',detalle:name});
+   if(!id||!isPrincipal){omitted++;continue;}
+   if(!p)noPK++;
+   data.push({id,pk:p,via:'P',estacion:station,detalle:desc,pkValidado:!!p});
   }
-  const unique=[...new Map(data.map(x=>[norm(x.id)+'|'+x.pk,x])).values()];
-  if(!unique.length)throw Error('No se reconocieron señales de vía principal P con código y PK. No se sustituyó la base.');
-  return {kind:'senales',data:unique,total:unique.length,rejected:omitted,details:unique.length+' señales de vía principal (P), '+omitted+' filas omitidas',
-    sample:unique.slice(0,12).map(x=>x.id+' · PK '+x.pk),
-    warning:'Solo se importan señales identificadas expresamente como vía principal (P). Verificá cada PK contra la planilla original.'};
+  const unique=[...new Map(data.map(x=>[norm(x.id)+'|'+x.pk+'|'+norm(x.estacion),x])).values()];
+  if(!unique.length)throw Error('No se reconocieron señales principales identificadas como P. No se sustituyó la base.');
+  return {kind:'senales',data:unique,total:unique.length,rejected:omitted,details:unique.length+' señales P; '+noPK+' sin PK individual (consulta, NO geocerca)',
+    sample:unique.slice(0,12).map(x=>x.id+' · '+(x.pk?'PK '+x.pk:'PK pendiente')+(x.estacion?' · '+x.estacion:'')),
+    warning:'Se conserva el estado P y el código que muestra el documento. Las señales sin PK se consultan, pero NO generan alertas por distancia. Verificá clasificación, posición y vigencia con la documentación ferroviaria antes de usar.'};
  }
  function parseSpeeds(src){
   const rows=src.format==='json'?(Array.isArray(src.data)?src.data:(src.data&&src.data.velocidades)||[]):src.rows;
@@ -1446,7 +1464,7 @@ function readH21Overrides0729(){
    (node&&node.parentNode||document.body).insertBefore(target,node?node.nextSibling:null);
   }
   target.replaceChildren();
-  const title=document.createElement('h2');title.textContent='Verificar antes de guardar · 0.7.29';target.appendChild(title);
+  const title=document.createElement('h2');title.textContent='Verificar antes de guardar · candidata 0.7.32';target.appendChild(title);
   const info=document.createElement('p');info.textContent=file.name+' · '+p.details;target.appendChild(info);
   if(p.rejected){const reject=document.createElement('p');reject.textContent='Atención: '+p.rejected+' filas no pudieron incorporarse.';target.appendChild(reject)}
   const warning=document.createElement('p');warning.textContent=p.warning;target.appendChild(warning);
