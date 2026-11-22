@@ -1747,6 +1747,11 @@ setInterval(()=>{
    last=p.time;const pos=location(p);
    evaluate(p,pos);checkStop(p,pos);
   }
+  const bulletin=typeof vigente080==='function'?vigente080():null;
+  const items=bulletin&&Array.isArray(bulletin.registros)?bulletin.registros:[];
+  const closures=items.filter(r=>r.tipo==='clausura_pan').length;
+  const candidates=provisional();
+  q('provisional0730').textContent='Velocidades provisorias consultables: '+candidates.length+' · Clausuras PAN en boletín: '+closures+' · '+(bulletin?'Último PDF: '+bulletin.archivo:'sin PDF de boletín guardado')+' · '+(q('verifyBulletin0730').checked?'cotejo marcado':'cotejo pendiente')+'. No acredita vigencia operativa.';
   updateStats();
  }catch(err){q('pkState0730').textContent='Error en panel experimental: '+err.message+'. Control manual disponible.'}
 },1600);
