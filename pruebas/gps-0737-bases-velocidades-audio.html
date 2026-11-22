@@ -249,6 +249,7 @@ body.app0733 #bases0722 .baseCommon0737 summary{font-size:15px;font-weight:750;c
 body.app0733 #bases0722 .baseRare0737{border:1px dashed #b4cbd3;border-radius:12px;padding:12px;margin:17px 0;background:#f8fbfc}
 body.app0733 #bases0722 .baseRare0737>summary{font-size:14px;font-weight:800;color:#5c6974;cursor:pointer}
 body.app0733 #bases0722 #baseStatus075{font-size:13px;line-height:1.6}
+body.app0733[data-view="velocidades"] #integral0730>details.manualTools0737{display:block!important}
 body.app0733 #integral0730 .manualTools0737{border:1px solid #d6e3e8;border-radius:12px;padding:12px;margin:12px 0;background:#f8fbfc}
 body.app0733 #integral0730 .manualTools0737 summary{font-weight:800;color:#285567;cursor:pointer}
 body.app0733 #integral0730 .manualTools0737 .row{display:flex;flex-wrap:wrap}
@@ -649,7 +650,7 @@ function vigente080(){
 }
 function statusVigente080(){
  const b=vigente080(),target=document.getElementById('bulletinCurrent080');
- if(target)target.textContent=b?'Último boletín GUARDADO (vigencia por verificar): '+(b.fecha||'fecha sin identificar')+' · '+b.archivo+' · '+(b.registros||[]).length+' registros · actualizado '+new Date(b.importado).toLocaleString('es-AR'):'Sin boletín previo guardado.';
+ if(target)target.textContent=b?'Boletín más reciente por fecha identificada (vigencia por verificar): '+(b.fecha||'fecha sin identificar')+' · '+b.archivo+' · '+(b.registros||[]).length+' registros · actualizado '+new Date(b.importado).toLocaleString('es-AR'):'Sin boletín previo guardado.';
 }
 
 function clean079(s){return String(s||'').replace(/\s+/g,' ').trim()}
@@ -2677,6 +2678,10 @@ setInterval(()=>{
    const card=document.createElement('div');card.className='alarmTop0737';
    const header=document.createElement('strong');header.textContent='Avisos sonoros y vibración';
    toggle.textContent='Activar avisos de prueba';
+   toggle.addEventListener('click',()=>{
+    // La confirmación audible desbloquea audio en Chrome tras un gesto del usuario.
+    if(/activados/i.test(toggle.textContent)&&typeof beep076==='function')beep076();
+   });
    const txt=document.createElement('p');txt.textContent='Señal reforzada: tres tonos y vibración. La potencia real depende del volumen multimedia, parlante y limitaciones de Chrome. No sustituye los avisos de seguridad ferroviaria.';
    card.append(header,toggle,txt);
    const diag=document.createElement('details');diag.className='manualTools0737';
