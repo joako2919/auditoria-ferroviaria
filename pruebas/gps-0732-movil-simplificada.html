@@ -67,13 +67,64 @@ main.wrap>*{scroll-margin-top:76px}
 #navMobile0732,.ferro-fold{display:none!important}
 main.wrap>section:not(#printCover0720):not(#printGraph0720):not(#printReport0720){display:none!important}
 }
+</style><style id="navCompact0732">
+/* Seis accesos reales, sin scroll horizontal ni sexta solapa cortada. */
+#navMobile0732{
+ display:grid!important;
+ grid-template-columns:minmax(0,1.08fr) minmax(0,1.1fr) minmax(0,.64fr) minmax(0,.84fr) minmax(0,1.08fr) minmax(0,.63fr)!important;
+ gap:3px!important;padding:6px 5px!important;
+ overflow:visible!important;white-space:normal!important;width:100%;
+}
+#navMobile0732>a,#navMobile0732>details>summary{
+ position:relative;min-width:0;width:100%;min-height:43px;
+ padding:7px 1px!important;font-size:clamp(10px,2.7vw,12px)!important;
+ line-height:1.14;text-align:center;border-radius:8px;
+ display:flex;align-items:center;justify-content:center;
+ background:#edf1f3!important;color:#303a42!important;
+ transition:background .12s ease,box-shadow .12s ease;
+}
+#navMobile0732>a[href="#bases0722"]:not(.nav-active0732){
+ background:#edf1f3!important;color:#303a42!important;
+}
+#navMobile0732>a.nav-active0732,
+#navMobile0732>details.nav-active0732>summary{
+ background:#c5e7e8!important;color:#084e59!important;
+ box-shadow:inset 0 -3px 0 #087482;
+}
+#navMobile0732>details>summary{list-style:none;cursor:pointer}
+#navMobile0732>details>summary::-webkit-details-marker{display:none}
+#navMobile0732>details>div{top:65px;right:5px;max-height:70vh;overflow-y:auto}
+#navMobile0732>a:focus-visible,#navMobile0732>details>summary:focus-visible{
+ outline:2px solid #005f78;outline-offset:2px
+}
+#navMobile0732 .nav-badge0732[hidden]{display:none!important}
+#navMobile0732 .nav-badge0732{
+ display:flex;align-items:center;justify-content:center;
+ position:absolute;right:-3px;top:-6px;min-width:16px;height:16px;
+ padding:0 3px;z-index:2;border-radius:11px;font-size:10px;line-height:1;
+ font-weight:800;color:white;background:#b51220;border:1px solid white;
+ font-variant-numeric:tabular-nums;
+}
+.nav-inbox0732{display:none;margin:10px 0;padding:9px;
+ background:#fff9f4;border:1px solid #ecc8ba;border-radius:9px;
+ font-size:12px;line-height:1.4}
+.nav-inbox0732.has-notices0732{display:block}
+.nav-inbox0732 header{background:transparent;color:#593a1c;padding:0 0 5px;font-weight:750;font-size:13px}
+.nav-notice0732{border-top:1px solid #eedbd0;padding:7px 0}
+.nav-notice0732 p{margin:4px 0}
+.nav-notice0732 button{font-size:12px;padding:7px 10px;background:#455c65}
+@media(max-width:350px){
+ #navMobile0732{gap:2px!important;padding:5px 3px!important}
+ #navMobile0732>a,#navMobile0732>details>summary{font-size:10px!important;min-height:41px}
+}
+@media print{#navMobile0732,.nav-inbox0732{display:none!important}}
 </style></head><body><header><strong>Auditoría Ferroviaria</strong><small>Belgrano Norte · EXPERIMENTAL 0.7.32 · LECTOR SEÑALES CORREGIDO · H21 · no reemplaza 0.7.22</small></header><nav class="no-print" id="navMobile0732" aria-label="Navegación principal">
-<a href="#h21Selector0721">Servicio</a>
-<a href="#datosAuditoria0732">Dotación</a>
-<a href="#autoPanel0728">GPS</a>
-<a href="#bases0722">Bases</a>
-<a href="#integral0730">Velocidades</a>
-<details><summary>Más</summary><div><a href="#manualSection0732">Manual</a><a href="#tendenciaSection0732">Tendencia</a><a href="#printGraph0720">Marcha</a><a href="#printReport0720">Informe</a></div></details>
+<a href="#h21Selector0721" data-tab="servicio" aria-label="Servicio" title="Servicio"><span>Servicio</span><small class="nav-badge0732" hidden></small></a>
+<a href="#datosAuditoria0732" data-tab="dotacion" aria-label="Dotación" title="Dotación"><span>Dotación</span><small class="nav-badge0732" hidden></small></a>
+<a href="#autoPanel0728" data-tab="gps" aria-label="GPS" title="GPS"><span>GPS</span><small class="nav-badge0732" hidden></small></a>
+<a href="#bases0722" data-tab="bases" aria-label="Bases" title="Bases"><span>Bases</span><small class="nav-badge0732" hidden></small></a>
+<a href="#integral0730" data-tab="velocidades" aria-label="Velocidades y precauciones" title="Velocidades"><span>Veloc.</span><small class="nav-badge0732" hidden></small></a>
+<details data-tab="mas"><summary aria-label="Más opciones" title="Más opciones"><span>Más</span><small class="nav-badge0732" hidden></small></summary><div><a href="#navAvisosMas0732">Novedades</a><a href="#manualSection0732">Manual</a><a href="#tendenciaSection0732">Tendencia</a><a href="#printGraph0720">Marcha</a><a href="#printReport0720">Informe</a></div></details>
 </nav><main class="wrap" id="inicioAuditoria"><section class="panel no-print" id="autoPanel0728" style="border:2px solid #0b6b78;background:linear-gradient(145deg,#f1fbfa,#ffffff);box-shadow:0 8px 25px #143b4817">
 <h2 style="color:#0b626d;border-color:#0b626d">Registro automático de estaciones · GPS 0.7.32 (ensayo)</h2>
 <p class="small"><strong>Prueba independiente:</strong> usa claves locales distintas de la versión 0.7.22. No se considera una medición ferroviaria certificada. No utilizar para decisiones de seguridad. La precisión, la pérdida de señal y la geocerca pueden afectar las horas registradas.</p>
@@ -1903,5 +1954,171 @@ setInterval(()=>{
   }));
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
+})();
+</script><script id="navNotificaciones0732">
+(function(){
+ 'use strict';
+ function start(){
+  const nav=document.getElementById('navMobile0732');
+  if(!nav)return;
+  const tabs={};
+  for(const name of ['servicio','dotacion','gps','bases','velocidades','mas']){
+   tabs[name]=nav.querySelector('[data-tab="'+name+'"]');
+  }
+  if(!Object.values(tabs).every(Boolean))return;
+  const panel={
+   gps:document.getElementById('autoPanel0728'),
+   bases:document.getElementById('bases0722'),
+   velocidades:document.getElementById('integral0730'),
+   mas:document.getElementById('printReport0720')
+  };
+  const tabLinks=nav.querySelectorAll('a[data-tab]');
+  let activeTab='servicio';
+  const KEY='audit_bn_nav_notificaciones_0732';
+  let notifications=[];
+  try{
+   const saved=JSON.parse(localStorage.getItem(KEY)||'[]');
+   if(Array.isArray(saved))notifications=saved.filter(x=>x&&typeof x.id==='string'&&['gps','bases','velocidades','mas'].includes(x.tab)).slice(-60);
+  }catch(_){}
+  const knownEventKeys=new Set();
+  function audit(){
+   try{return window.AuditoriaGPS0728?.getActive?.()?.id||''}catch(_){return ''}
+  }
+  function visibleNotice(n){return !n.auditId||n.auditId===audit()}
+  function currentEvents(){
+   try{return (typeof state!=='undefined'&&Array.isArray(state.events))?state.events:[]}catch(_){return []}
+  }
+  function eventKey(e){
+   return [e.auditId||'',e.kind||'',e.alertKey0732||'',e.time||e.start||'',e.place||'',(e.reason||'').slice(0,70)].join('|');
+  }
+  for(const e of currentEvents())knownEventKeys.add(eventKey(e));
+  function saveNotes(){
+   try{localStorage.setItem(KEY,JSON.stringify(notifications.slice(-60)))}catch(_){}
+  }
+  function setTab(tab){
+   if(!tabs[tab])return;
+   activeTab=tab;
+   Object.entries(tabs).forEach(([key,node])=>{
+    const flag=key===tab;
+    node.classList.toggle('nav-active0732',flag);
+    const action=node.tagName==='DETAILS'?node.querySelector('summary'):node;
+    if(flag)action.setAttribute('aria-current','location');
+    else action.removeAttribute('aria-current');
+   });
+  }
+  function selectorTarget(tab){
+   const p=panel[tab];
+   if(!p)return null;
+   let box=p.querySelector(':scope > .nav-inbox0732');
+   if(!box){
+    box=document.createElement('aside');
+    box.className='nav-inbox0732';
+    box.id=tab==='mas'?'navAvisosMas0732':'navAvisos'+tab+'0732';
+    box.setAttribute('aria-label','Avisos de '+tab);
+    const header=document.createElement('header');header.textContent='Avisos y novedades recientes';
+    box.appendChild(header);
+    p.insertBefore(box,p.children[1]||null);
+   }
+   return box;
+  }
+  function update(){
+   for(const [key,node] of Object.entries(tabs)){
+    const unread=notifications.filter(x=>x.tab===key&&!x.read&&visibleNotice(x)).length;
+    const n=node.querySelector('.nav-badge0732');
+    if(n){n.hidden=!unread;n.textContent=unread>99?'99+':String(unread);
+     n.setAttribute('aria-label',unread+' avisos sin revisar');}
+    const target=node.tagName==='DETAILS'?node.querySelector('summary'):node;
+    const base=key==='velocidades'?'Velocidades':key.charAt(0).toUpperCase()+key.slice(1);
+    target.setAttribute('aria-label',base+(unread?' · '+unread+' avisos pendientes de lectura':''));
+   }
+   for(const tab of ['gps','bases','velocidades','mas']){
+    const box=selectorTarget(tab);
+    if(!box)continue;
+    const entries=notifications.filter(x=>x.tab===tab&&!x.read&&visibleNotice(x)).slice(-8).reverse();
+    box.querySelectorAll('.nav-notice0732').forEach(el=>el.remove());
+    box.classList.toggle('has-notices0732',entries.length>0);
+    for(const note of entries){
+     const row=document.createElement('div');row.className='nav-notice0732';
+     const msg=document.createElement('p');msg.textContent=note.text;
+     const btn=document.createElement('button');btn.type='button';btn.textContent='Leído (no elimina el registro)';
+     btn.onclick=()=>{
+      note.read=true;saveNotes();update();
+     };
+     row.append(msg,btn);box.appendChild(row);
+    }
+    if(entries.length){
+     const all=notifications.filter(x=>x.tab===tab&&!x.read&&visibleNotice(x)).length;
+     const title=box.querySelector('header');
+     title.textContent=all+' aviso'+(all===1?'':'s')+' sin revisar'+(all>8?' (se muestran los 8 más recientes)':'');
+    }
+   }
+  }
+  function add(tab,id,textValue){
+   const str=String(textValue||'').trim().slice(0,370);
+   if(!str||!panel[tab])return;
+   if(notifications.some(x=>x.id===id))return;
+   notifications.push({tab,id,text:str,read:false,auditId:audit(),created:Date.now()});
+   if(notifications.length>60)notifications=notifications.slice(-60);
+   saveNotes();update();
+  }
+  // Un aviso sonoro de ENSAYO no es una infracción comprobada.
+  function watchText(id,tab,pattern,tag){
+   const el=document.getElementById(id);if(!el)return;
+   let prior=el.textContent.trim();
+   const observer=new MutationObserver(()=>{
+    const value=el.textContent.trim();
+    if(value===prior)return;
+    prior=value;
+    if(!pattern.test(value))return;
+    const identity=tag+'|'+audit()+'|'+value.slice(0,220);
+    add(tab,identity,value);
+   });
+   observer.observe(el,{childList:true,characterData:true,subtree:true});
+  }
+  watchText('notice0730','velocidades',/^(?:AVISO EXPERIMENTAL|Posible exceso|ALERTA DE ENSAYO)/i,'velocidad');
+  watchText('autoStatus0728','gps',/^(?:GPS sin lecturas recientes|GPS incierto|GPS impreciso|GPS no activo)/i,'gps');
+  watchText('pdfStatus079','bases',/^(?:No se importó|No se pudo guardar)/i,'importador');
+  // Registrar eventos nuevos del servicio, sin convertir registros históricos en alarmas nuevas.
+  function scanEvents(){
+   const id=audit();
+   for(const e of currentEvents()){
+    const key=eventKey(e);
+    if(knownEventKeys.has(key))continue;
+    knownEventKeys.add(key);
+    if(id&&e.auditId!==id)continue;
+    if(e.kind==='novedad'){
+     const speed=e.source==='gps-0732-experimental'||e.status==='pendiente_verificacion';
+     add(speed?'velocidades':'mas','evento|'+key,
+        (speed?'Posible exceso por GPS, pendiente de cotejo. ':'Novedad registrada. ')+
+        String(e.reason||'Consultar el informe').slice(0,260));
+    }else if(e.kind==='detencion'&&/Detención GPS experimental/i.test(e.reason||'')){
+     add('gps','detencion|'+key,'Detención detectada por GPS (ensayo), comprobar duración y ubicación. '+(e.place||''));
+    }
+   }
+  }
+  setInterval(scanEvents,2500);
+  // Abrir el acceso marca la ubicación actual; NO marca como resueltas las novedades.
+  for(const link of tabLinks){
+   link.addEventListener('click',()=>setTab(link.dataset.tab));
+  }
+  const more=tabs.mas;
+  more.addEventListener('toggle',()=>{if(more.open)setTab('mas')});
+  more.querySelectorAll('div>a').forEach(link=>link.addEventListener('click',()=>{
+   setTab('mas');
+   const dest=document.querySelector(link.getAttribute('href'));
+   const folded=dest?.closest('.ferro-fold');if(folded)folded.open=true;
+  }));
+  function restoreHash(){
+   const hash=location.hash.slice(1);
+   const target=Object.values(tabs).find(node=>node.tagName==='A'&&node.hash.slice(1)===hash);
+   if(target)setTab(target.dataset.tab);
+   else if(['navAvisosMas0732','manualSection0732','tendenciaSection0732','printGraph0720','printReport0720'].includes(hash))setTab('mas');
+  }
+  window.addEventListener('hashchange',restoreHash);
+  restoreHash();update();
+  window.AuditoriaNav0732={inspect:()=>notifications.filter(visibleNotice).map(x=>({...x})),active:()=>activeTab};
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
+ else start();
 })();
 </script></body></html>
