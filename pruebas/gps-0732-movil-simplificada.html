@@ -418,13 +418,23 @@ const BULLETINS079='audit_bn_bulletins_079';
    El contenido se incorpora exclusivamente desde el dispositivo del auditor. */
 function readBulletins079(){try{const a=JSON.parse(localStorage.getItem(BULLETINS079)||'[]');return Array.isArray(a)?a:[]}catch(e){return []}}
 function vigente080(){const a=readBulletins079();return a.length?a[a.length-1]:null}
-function statusVigente080(){const b=vigente080();const target=document.getElementById('bulletinCurrent080');if(target)target.textContent=b?'Boletín vigente: '+(b.fecha||'fecha sin identificar')+' · '+b.archivo+' · '+(b.registros||[]).length+' registros · actualizado '+new Date(b.importado).toLocaleString('es-AR'):'Sin boletín vigente guardado.'}
+function statusVigente080(){
+ const b=vigente080(),target=document.getElementById('bulletinCurrent080');
+ if(target)target.textContent=b?'Último boletín GUARDADO (vigencia por verificar): '+(b.fecha||'fecha sin identificar')+' · '+b.archivo+' · '+(b.registros||[]).length+' registros · actualizado '+new Date(b.importado).toLocaleString('es-AR'):'Sin boletín previo guardado.';
+}
 
 function clean079(s){return String(s||'').replace(/\s+/g,' ').trim()}
 function parseBulletin079(rows,source){
  // Importación sin referencias operativas preinstaladas. Los datos requieren
  // cotejo por el auditor contra el PDF cargado en su dispositivo.
 const out=[];let direction='',date='';
+ // Fecha de cabecera del boletín: no utilizar las fechas de origen de cada precaución.
+ const months={enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,septiembre:9,setiembre:9,octubre:10,noviembre:11,diciembre:12};
+ const datePattern=/(?:\b(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)\s+)?\b(\d{1,2})\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)\s+de\s+(20\d{2})\b/i;
+ const header=rows.slice(0,100).join(' '),match=header.match(datePattern);
+ if(match){const dd=Number(match[1]),mm=months[match[2].toLowerCase()],yy=Number(match[3]);const dt=new Date(yy,mm-1,dd);if(dt.getFullYear()===yy&&dt.getMonth()+1===mm&&dt.getDate()===dd)date=String(dd).padStart(2,'0')+'/'+String(mm).padStart(2,'0')+'/'+yy;}
+ // El nombre se muestra únicamente como referencia si la fecha documental no se reconoció.
+ if(!date){const matchName=String(source).match(datePattern);if(matchName){const dd=Number(matchName[1]),mm=months[matchName[2].toLowerCase()],yy=Number(matchName[3]);date=String(dd).padStart(2,'0')+'/'+String(mm).padStart(2,'0')+'/'+yy+' (fecha deducida del nombre; cotejar PDF)';}}
  const pkr=/\b(\d{1,2})\s*[\/.,]\s*(\d{3})\b/g;
  const start=/^\s*(\d{1,2})\s+(\d{1,2}\s*[\/.,]\s*\d{3})\s+(\d{1,2}\s*[\/.,]\s*\d{3})\b/;
  const sp=/\b(\d{1,3})\s*(?:km\s*\/\s*h|kmh|kph)\b/i;
@@ -432,7 +442,6 @@ const out=[];let direction='',date='';
  const normpk=s=>{const m=[...s.matchAll(pkr)][0];return m?m[1].padStart(2,'0')+'/'+m[2]:''};
  for(let i=0;i<rows.length;i++){
   const line=clean079(rows[i]);
-  if(/martes\s+3\s+de\s+noviembre\s+de\s+2026/i.test(line))date='03/11/2026';
   if(/V[IÍ]A\s+ASCENDENTE/i.test(line)){direction='ascendente';continue}
   if(/V[IÍ]A\s+DESCENDENTE/i.test(line)){direction='descendente';continue}
   if(!direction)continue;
@@ -450,7 +459,7 @@ const out=[];let direction='',date='';
   const closure=/PAILLET[EÉ]|CLAUSURADO/i.test(motive);
   if(!speed&&!closure)continue;
   if(!motive)motive=closure?'P.A.N. Pailleté clausurado al paso vehicular':'Motivo no identificado: revisar boletín';
-  out.push({tipo:closure?'clausura_pan':'precaucion_velocidad',via:direction,numero:num,inicio:pk1,fin:pk2,pk:pk1,velocidad:speed?Number(speed[1]):null,motivo:motive,fechaDesde:dateMatch?dateMatch[1]:'',fechaHasta:'Nuevo aviso',fechaBoletin:date,origen:source});
+  out.push({tipo:closure?'clausura_pan':'precaucion_velocidad',via:direction,numero:num,inicio:pk1,fin:pk2,pk:pk1,velocidad:speed?Number(speed[1]):null,motivo:motive,fechaDesde:dateMatch?dateMatch[1]:'',fechaHasta:'',estadoAviso:/nuevo\s*aviso/i.test(tail)?'nuevo aviso':'no identificado',fechaBoletin:date,origen:source});
  }
  return out;
 }
@@ -473,16 +482,26 @@ async function importPrecautions079(ev){
   }
   const entries=parseBulletin079(rows,file.name);
   if(!entries.length)throw Error('No se reconocieron registros de las tablas. No se guardó nada.');
+  const currentSameFile=readBulletins079().filter(b=>b.archivo===file.name).at(-1);
+  const sig=e=>[e.tipo||'',e.via||'',e.inicio||'',e.fin||'',String(e.velocidad??''),String(e.numero??'')].join('|');
+  const oldSet=new Set((currentSameFile?.registros||[]).map(sig));
+  const newSet=new Set(entries.map(sig));
+  const added=entries.filter(e=>!oldSet.has(sig(e)));
+  const missing=(currentSameFile?.registros||[]).filter(e=>!newSet.has(sig(e)));
+  const speeds=entries.filter(e=>e.tipo==='precaucion_velocidad').length,pan=entries.filter(e=>e.tipo==='clausura_pan').length;
+  const deltaMessage=currentSameFile
+    ?' Comparación con la última carga del mismo PDF: '+currentSameFile.registros.length+' guardados; '+added.length+' nuevos/diferentes; '+missing.length+' ya no detectados. No se sobrescribe el historial.'
+    :' No existe carga anterior con el mismo nombre de archivo.';
   if(/(?:3|4)\s+de\s+noviembre\s+de\s+2026/i.test(rows.join(' ')) && entries.length!==9)throw Error('El boletín del 03/11/2026 debe tener 9 registros. No se permite guardar una lectura incompleta.');
      const works=[];
    const notices='';
-   status.textContent='Vista previa: '+entries.length+' precauciones/clausuras candidatas extraídas del PDF. No se cargan automáticamente trabajos, avisos ni otras disposiciones. Revisá cada registro antes de guardar.';
+   status.textContent='Vista previa SIN guardar: '+entries.length+' registros candidatos ('+speeds+' precauciones de velocidad, '+pan+' clausuras PAN). Fecha reconocida: '+(entries[0]?.fechaBoletin||'sin fecha documental comprobada')+'.'+deltaMessage+' No incluye trabajos ni otros avisos.';
 const table=document.createElement('div');table.style.cssText='max-height:370px;overflow:auto';
   entries.forEach((x,i)=>{const d=document.createElement('div');d.className='entry';d.textContent=(i+1)+'. '+x.via.toUpperCase()+' · '+x.inicio+' → '+x.fin+' · '+(x.velocidad===null?'Clausura PAN, sin velocidad':x.velocidad+' km/h')+' · '+x.motivo+' · desde '+(x.fechaDesde||'fecha no identificada');table.appendChild(d)});preview.appendChild(table);
-     const warning=document.createElement('p');warning.className='small';warning.textContent='Importación PARCIAL: solamente precauciones y clausuras reconocidas por la lectura de texto del PDF. Debés verificar manualmente sentido, PK, velocidad y vigencia. Los trabajos y avisos quedan fuera de esta importación; consultá el PDF oficial. No sustituye instrucciones operativas.';preview.appendChild(warning);
+     const warning=document.createElement('p');warning.className='small';warning.textContent='Importación PARCIAL: verificá cada registro con el PDF. Las clausuras de PAN NO son restricciones de velocidad. Ni el nombre del archivo ni el historial garantizan la vigencia. Trabajos y otras disposiciones quedan fuera.';preview.appendChild(warning);
    const btn=document.createElement('button');btn.type='button';btn.textContent='Guardar solo precauciones cotejadas ('+entries.length+')';
    btn.onclick=()=>{
-    if(!confirm('¿Verificaste manualmente TODAS las precauciones/clausuras mostradas contra el PDF original y aceptás guardar SOLO esas entradas? Trabajos y avisos no se importan en esta versión.'))return;
+    if(!confirm('¿Verificaste TODAS las filas del boletín con el PDF original? La lectura actual tiene '+entries.length+' registros ('+speeds+' precauciones de velocidad, '+pan+' clausuras PAN).'+(currentSameFile?' Ya hay '+currentSameFile.registros.length+' registros guardados del mismo archivo: se conservarán en el historial.':'')+' Los trabajos y avisos NO se importan. ¿Guardar esta nueva versión cotejada?'))return;
     try{
      const item={id:file.name+'|'+Date.now(),archivo:file.name,fecha:entries[0].fechaBoletin||'',importado:new Date().toISOString(),registros:entries,trabajos:works,disposicionesTexto:notices,documentoCompleto:false,alcance:'solo_precauciones'};
      const history=readBulletins079();history.push(item);
