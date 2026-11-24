@@ -40,3 +40,11 @@
 - No inferir ni prometer que el GPS está calibrado; se requiere prueba en campo.
 
 **Estado:** Incidencia de GPS **abierta para validación**, sin modificación del código ni de bases. Importador de PDF 24/11 permanece cerrado y funcionando en 0.7.54.
+
+## Aclaración posterior del auditor — interpretación del servicio 3105
+- El usuario aclara que **3105 / Carapachay → Retiro** corresponde a una **prueba anterior**, probablemente el **sábado 21/11/2026**; **no es registro de las auditorías del martes 24/11**.
+- La pantalla GPS del 24/11 mostraba «Servicio 3105 · auditoría cerrada» y 9 movimientos archivados; es incorrecto atribuirlos al servicio 3086 del día actual o presentarlos como comprobación de GPS de hoy.
+- El auditor indica que pulsó «Iniciar nueva auditoría», pero seguía visible el 3105. El código `launch()` verifica `initialSetup()` **antes de crear un nuevo ID de auditoría**; cuando la selección H21 (fecha/tren/origen/destino) no cumple los requisitos, la función devuelve el control y **conserva la ficha cerrada anterior**. Esta es una causa lógica **posible**, a confirmar con el mensaje de estado de GPS mostrado en ese momento.
+- El método `clearTestRecords()` no borra físicamente el historial, por diseño, y el panel cerrado continúa mostrando la última auditoría hasta que otra arranca correctamente. El requisito correcto es: **vista de nueva auditoría limpia, datos previos archivados y consultables por fecha/servicio**; no borrar la historia completa.
+- Solicitar como control en futura versión experimental: mostrar «Auditoría nueva NO iniciada — seleccionar servicio H21 válido», aclarar «3105 ARCHIVADA» y ocultar sus movimientos del panel de trabajo nuevo, sin eliminarlos de almacenamiento. La vista debe indicar identificador de nueva auditoría, fecha, tren, y contador cero cuando se inició una nueva correctamente.
+- **No modificar la 0.7.54 mientras se realizan pruebas en campo** sin exportar respaldo y consensuar la siguiente versión de prueba.
