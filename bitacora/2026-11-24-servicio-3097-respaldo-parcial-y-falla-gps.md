@@ -41,3 +41,16 @@ Estado en el respaldo: auditoría en curso, no cerrada.
 - Comparar el respaldo final con esta foto de datos de las 17:22 para saber si GPS se recuperó y si el historial archivó correctamente el 3097.
 
 Conclusión: tres marcaciones automáticas y 98 muestras confirmadas, continuidad GPS deficiente, contador de estaciones incompleto por diseño y acumulado de interrupciones contaminado por 19m02s anteriores a la nueva auditoría. No usar indicadores experimentales para dictámenes ferroviarios operativos.
+
+## Actualización: respaldo definitivo exportado 17:29 ART
+- El auditor remitió un SEGUNDO respaldo integral exportado **24/11/2026 17:29:20 ART** y se comparó con el exportado a las 17:22:25 ART.
+- **Cierre confirmado**: la ficha de servicio **3097** pasa de estado **en_curso** a **cerrada**, con hora de cierre **17:28:00 ART**, conservando fecha, servicio, origen y destino declarados.
+- El 3097 fue incorporado al **historial** (antes había 3 entradas: 3102, 3105 y 3090; ahora hay **4**). Permanecen las otras tres entradas intactas.
+- Se preservan los **3 movimientos GPS** originales (Retiro, Saldías, Aristóbulo del Valle), las **98 muestras de velocidad** y los registros de continuidad GPS **sin cambios**.
+- **No hubo recuperación de GPS** documentada después de aproximadamente **17:00:03**. El quinto evento GPS_LOST sigue **abierto** en el respaldo aunque se haya cerrado la auditoría a las 17:28; se requiere mejorar el cierre técnico de un intervalo inconcluso sin fingir GPS_RESTORED.
+- La comparación automática identificó exactamente **dos entradas modificadas** dentro de la sección de datos: la ficha de sesión activa y el historial. El resto, incluidas bases documentales y recorridos anteriores, quedó idéntico en estos dos archivos.
+- La versión visible continúa siendo experimental **0.7.54**; el campo `version` del exportador dice **0.7.48**. Es un pendiente de metadatos/rotulación.
+- **Se valida el procedimiento de archivado y separación histórica**, no el recorrido completo, la posición kilométrica ni la exactitud de velocidades. No dar por cubiertos los 23 puntos por el solo hecho de cerrar el 3097.
+- El primer respaldo sigue siendo evidencia intermedia; el segundo, evidencia de cierre. Ambos contienen datos privados: **no subirlos a GitHub público**.
+
+**Próxima prioridad:** aislar GPS por auditoría y registrar correctamente inicio/cierre de intervalos, mantener registros manuales y corregir el conteo/representación visual, sin modificar ni depurar las bases existentes.
