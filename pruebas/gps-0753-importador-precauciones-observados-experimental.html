@@ -803,7 +803,7 @@ function parseBulletin079(rows,source){
      if(/\b(?:AVENIDA LA|AVENIDA)\s*$/i.test(motivo)&&/^PAMPA\b/i.test(after))motivo=clean079(motivo+' '+plain(after));
      if(!motivo)alertas.push('Motivo no identificado en esta fila');
    }else if(tipo==='clausura_pan'){
-     motivo=clean079([ownPAN?plain(tail):'',beforePAN?plain(before):'',afterPAN?plain(after):'',/^POR ACTO DE VANDALISMO/i.test(after)?plain(after):''].filter(Boolean).join(' '));
+     motivo=clean079([ownPAN?plain(tail):'',beforePAN?plain(before):'',afterPAN?plain(after):'',/^(?:POR\s+)?ACTO\s+DE\s+VANDALISMO\b/i.test(after)?plain(after):''].filter(Boolean).join(' '));
      if(!motivo)motivo='P.A.N. clausurado al paso vehicular (verificar descripción)';
    }else{
      motivo=plain(tail);
