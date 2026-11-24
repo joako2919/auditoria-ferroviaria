@@ -54,3 +54,11 @@ Conclusión: tres marcaciones automáticas y 98 muestras confirmadas, continuida
 - El primer respaldo sigue siendo evidencia intermedia; el segundo, evidencia de cierre. Ambos contienen datos privados: **no subirlos a GitHub público**.
 
 **Próxima prioridad:** aislar GPS por auditoría y registrar correctamente inicio/cierre de intervalos, mantener registros manuales y corregir el conteo/representación visual, sin modificar ni depurar las bases existentes.
+
+## Preparación para prueba de campo 3107 y corrección de terminología ferroviaria
+- El auditor prepara servicio **3107**, tramo efectivamente auditado **Boulogne Sur Mer → Villa Rosa**, fecha 24/11/2026, **sentido ascendente**.
+- Para aislar la hipótesis de suspensión por Android, durante el recorrido mantendrá la aplicación **0.7.54 en primer plano**, sin cambiar a ChatGPT ni otras aplicaciones. Al terminar: cerrar, archivar y exportar respaldo privado JSON; conservar los anteriores.
+- Requisito terminológico del auditor: sustituir las leyendas visibles de «Sentido de circulación» *Retiro → Villa Rosa* y *Villa Rosa → Retiro* por **«Sentido ascendente»** y **«Sentido descendente»**, respectivamente. Mostrar las cabeceras como aclaración secundaria opcional, no como nombre del sentido.
+- **Ascendente** comprende desplazamiento en dirección Retiro → Villa Rosa, incluyendo servicios parciales Retiro → Grand Bourg y Boulogne → Villa Rosa; **descendente** comprende dirección Villa Rosa → Retiro, incluyendo Grand Bourg → Retiro o Villa Rosa → Boulogne.
+- Mantener sin cambio los identificadores internos de sentido (asc/desc), la selección efectiva de servicio H21, el origen y destino reales y los historiales; **no alterar 0.7.54 durante el viaje**. Implementar solo en próxima experimental probada por separado.
+- Punto de verificación: para 3107, el selector debe seguir filtrando el H21 por fecha, estación inicial Boulogne, destino Villa Rosa y sentido ascendente, sin reinterpretar un servicio parcial como cambio de sentido.
