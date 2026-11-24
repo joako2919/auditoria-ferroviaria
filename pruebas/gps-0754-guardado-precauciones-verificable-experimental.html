@@ -926,7 +926,7 @@ async function importPrecautions079(ev){
      statusVigente080();preview.replaceChildren();return;
     }
     const item={id:file.name+'|'+Date.now(),archivo:file.name,fecha:diag.fechaDocumental,importado:new Date().toISOString(),
-       registros:active,observados,conteoDocumental:diag.filas,resumenExtraccion:{velocidades:diag.velocidades,clausuras:diag.clausuras,faltantes:diag.faltantes},
+       registros:active,observados:observed,conteoDocumental:diag.filas,resumenExtraccion:{velocidades:diag.velocidades,clausuras:diag.clausuras,faltantes:diag.faltantes},
        revisionPendiente:observed.length>0,trabajos:[],disposicionesTexto:'',documentoCompleto:false,alcance:'solo_precauciones_cotejadas'};
     const updated=[...history,item],serialized=JSON.stringify(updated);
     localStorage.setItem(BULLETINS079,serialized);
