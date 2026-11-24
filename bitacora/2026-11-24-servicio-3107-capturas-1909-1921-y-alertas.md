@@ -31,3 +31,50 @@
 6. Priorizar en rama experimental **0.7.55 o posterior**, sin tocar 0.7.54 ni estable 0.7.22: aislamiento GPS, gráfico legible, contador de tramo, arribos/permanencias, alertas con causa y actualización de dotación.
 
 **Estado:** evaluación PRELIMINAR basada solo en capturas. El 3107 **no está confirmado como cerrado ni completo** hasta contar con respaldo JSON definitivo. No usar resultados experimentales para sanciones o decisiones de seguridad operacional.
+
+## Resultado final corroborado con respaldo JSON exportado 19:27:57 ART
+**Fuente:** respaldo privado recibido al finalizar el 3107 (archivo exportado `2026-11-24T22:27:57.316Z`), procesado localmente. **No publicar datos personales de la dotación, coordenadas individuales ni el JSON completo.**
+
+### Estado del cierre
+- Auditoría `BN-2026-11-24-3107-mwv7nyl0`: estado `cerrada`, iniciada **18:32:51 ART**, cerrada **19:27:48 ART**, origen auditado **Boulogne Sur Mer**, destino **Villa Rosa**, sentido `asc`. Se conserva historial de **5 auditorías**: 3102, 3105, 3090, 3097 y 3107.
+- La cabecera del exportador interno continúa mostrando la etiqueta heredada `0.7.48`, aunque capturas confirman interfaz **0.7.54**; es incidencia de metadatos, no prueba de versión cambiada.
+- Los datos GPS del 3107 y boletines del 24/11 continúan separados por clave/identificador de auditoría.
+
+### Cobertura del recorrido Boulogne → Villa Rosa
+- La lista programada del tramo comprende **14 estaciones** (incluidos extremos). **13 estaciones distintas** tienen una marca automática GPS, frente a 14 movimientos GPS archivados. **Manuel Alberti** (H21 paso **19:08**) es la única estación del tramo sin marca.
+- Marcas (GPS estimado vs H21; diferencia):
+  - Boulogne partida **18:33:48** vs 18:29:00 **+4:48**.
+  - Vicealmirante Montes partida **18:40:54** vs 18:36:00 **+4:54**.
+  - Don Torcuato partida **18:45:16** vs 18:40:00 **+5:16**.
+  - A. Sourdeaux partida **18:49:05** vs 18:44:00 **+5:05**.
+  - Villa de Mayo partida **18:52:52** vs 18:46:00 **+6:52**.
+  - Los Polvorines partida **18:56:40** vs 18:49:00 **+7:40**.
+  - Pablo Nogués partida **18:59:36** vs 18:53:00 **+6:36**.
+  - Grand Bourg **partida** 19:03:28 vs H21 **llegada** 18:57:00 **+6:28**, **tipos no equivalentes**.
+  - Tierras Altas partida **19:07:07** vs paso 19:01:00 **+6:07**.
+  - Tortuguitas partida **19:11:39** vs paso 19:05:00 **+6:39**.
+  - Manuel Alberti **sin marca** vs paso H21 19:08:00.
+  - Del Viso partida **19:18:07** vs paso 19:12:00 **+6:07**.
+  - Cecilia Grierson partida **19:21:56** vs paso 19:16:00 **+5:56**.
+  - Villa Rosa **llegada** 19:27:42 vs H21 19:22:00 **+5:42**.
+  - **Anomalía**: aplicación añadió **Villa Rosa partida 19:27:46** sin horario teórico (+4 s después de llegada); evitar falsas partidas de cabecera.
+- El registro automático etiqueta como «partida» todas las estaciones intermedias incluso cuando el itinerario tiene evento de «paso». No certifica permanencias ni arribos intermedios; corregir tipología documental antes de comparar.
+
+### Interrupciones y muestras
+- Continuidad GPS del 3107: **cuatro interrupciones recuperadas**, duraciones 13 s, 109 s, 35 s, 23 s = **180 s, 3 min** de eventos cerrados; 0 pérdidas abiertas en ese expediente a la exportación. Se observan 4 restauraciones GPS correspondientes.
+- El inspector dejó **dos novedades técnicas** que describen una reanudación manual del GPS cerca de Tortuguitas y una nueva reanudación entre Manuel Alberti y Del Viso; por lo tanto no calificar como seguimiento sin interacción ni atribuir fallas exclusivamente a cambiar de aplicación.
+- Historial de velocidad: **618 muestras**, 18:32:55–19:27:42 ART. Máxima velocidad GPS muestral **83,6 km/h**. **79** muestras cumplen simultáneamente umbrales locales `gpsAccuracy <= 25 m` y `pkAccuracy <= 100 m`; ninguna muestra supera su límite documental nominal muestral, **esto NO demuestra cumplimiento de velocidades** por falta de PK/vía y precauciones provisionales validados.
+- Carteles: **cero verificaciones específicas** en registros de este servicio. El modal «AVISO DE CONTROL... Aviso de prueba» no prueba proximidad a un cartel ni acredita cartelería existente/ausente.
+- 2 novedades del 3107 = eventos técnicos de reanudación del GPS, no incidentes ferroviarios de circulación por sí mismos.
+
+### Prioridades de mejora
+1. **Marcación al pasar**: distinguir según H21 **paso vs llegada vs partida**, evitando comparar una partida GPS con un paso o llegada H21 como si fueran hechos equivalentes; recuperar arribos/permanencias con dos marcas suficientemente fiables.
+2. **No marcar partida en cabecera terminal** después de llegada.
+3. Cobertura: etiquetar `13/14 estaciones con evento GPS`, `14 movimientos (uno no programado)`; estaciones sin marca como **sin verificar**, sin inventar tiempos.
+4. Continuidad: historial de pérdida y restauración y acciones manuales claras, protección Android segundo plano y estados visibles.
+5. Dashboard: gráficos ampliados y métricas por tramo, colores basados en eventos equivalentes validados, sin confundir lecturas GPS con precisiones PK.
+6. Unificar panel de alertas por **causa efectiva**, asociar a restricciones y controles de tres carteles; preservar control manual.
+7. Mantener corrección del boletín PDF 24/11 sin reimportar; cambiar leyendas del sentido a **ascendente/descendente** en una versión experimental futura sin romper sentido interno ni H21.
+8. Sin modificar 0.7.54 estable en uso ni respaldos privados; ensayar pilotos 0.7.55+ sobre copia, después de validación.
+
+**Conclusión:** 3107 es la auditoría con mejor reconocimiento de estaciones entre las analizadas el 24/11, **13 de 14**, pero no se puede declarar detección perfecta: Manuel Alberti quedó sin marca, hubo cuatro cortes GPS y la llegada a Villa Rosa disparó una partida ficticia. El cierre y preservación del historial funcionaron.
