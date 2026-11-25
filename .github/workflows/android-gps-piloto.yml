@@ -1,0 +1,42 @@
+name: "APK piloto GPS Android (experimental)"
+on:
+  push:
+    branches:
+      - android-gps-piloto-01
+    paths:
+      - 'android-gps-piloto/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Descargar rama de prueba
+        uses: actions/checkout@v4
+      - name: Instalar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Preparar Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Instalar SDK API 35
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Preparar Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Compilar APK debug del piloto
+        working-directory: android-gps-piloto
+        run: gradle :app:assembleDebug --no-daemon
+      - name: Publicar instalador experimental
+        uses: actions/upload-artifact@v4
+        with:
+          name: auditoria-gps-piloto-android-apk
+          path: android-gps-piloto/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 7
