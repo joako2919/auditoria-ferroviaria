@@ -3878,4 +3878,142 @@ setInterval(()=>{
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(deduplicate,0),{once:true});
  else setTimeout(deduplicate,0);
 })();
+</script><style id="estilos0756">
+#fullGraph0756[hidden],#lostGps0756[hidden]{display:none!important}
+#fullGraph0756{position:fixed;inset:0;z-index:10010;overflow-y:auto;background:#f3f7f9;color:#173c49;padding:12px 12px 55px}
+#fullGraph0756 header{position:sticky;top:0;z-index:2;background:#f3f7f9;display:flex;align-items:center;gap:10px;padding:9px 0}
+#fullGraph0756 h2{font-size:21px;margin:0;flex:1}
+#fullGraph0756 .graphItem0756{margin:10px 0;padding:12px;background:white;border:1px solid #d4e2e8;border-radius:13px}
+#fullGraph0756 .graphX0756{overflow-x:auto;max-width:100%}
+#fullGraph0756 svg{display:block;width:100%;min-width:790px;height:auto;max-width:none}
+#fullGraph0756 #speedWide0756{min-width:1050px}
+#fullGraph0756 p{font-size:13px;line-height:1.5}
+#fullGraph0756 table{min-width:700px;border-collapse:collapse;font-size:13px}
+#fullGraph0756 th,#fullGraph0756 td{padding:8px;border-bottom:1px solid #e1e9ed;text-align:left}
+#fullGraph0756 th{background:#e9f3f6}
+#lostGps0756{position:fixed;left:0;right:0;bottom:0;z-index:10011;max-width:650px;margin:auto;padding:14px;background:#aa1020;color:white;border-top:6px solid #ffda3e;box-shadow:0 0 22px #0007;border-radius:12px 12px 0 0}
+#lostGps0756 strong{display:block;font-size:23px}
+#lostGps0756 p{font-size:15px;line-height:1.4}
+#lostGps0756 button{padding:12px;border:1px solid #fff;border-radius:10px;background:#fff;color:#a91020;font-weight:bold;margin:4px}
+#lostGps0756 button.secondary{color:white;background:transparent}
+#cartelesShort0756{margin:12px 0;padding:12px;border-left:4px solid #0c7b89;background:#e9f6f8;border-radius:10px}
+#cartelesShort0756 button{padding:10px;margin:4px;border-radius:10px;font-weight:700}
+#autoPanel0728 #cartelesManual0733{display:block!important;padding:8px;background:#fff}
+#autoPanel0728 #cartelesManual0733 summary{font-size:17px;font-weight:700}
+#cartelResult0756{font-weight:700;color:#176a47}
+#dashboardStats0733 #dSpeedSvg0733{min-width:780px!important;width:780px!important}
+</style><script id="mejoras0756">
+(function(){
+'use strict';
+const q=id=>document.getElementById(id),create=(tag,id,content)=>{const el=document.createElement(tag);el.id=id;if(content!==undefined)el.textContent=content;return el};
+const act=()=>window.AuditoriaGPS0728?.getActive?.()||null;
+const norm=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const escape=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const mss=x=>!Number.isFinite(x)?'Sin cotejo':(x<0?'−':x>0?'+':'')+Math.floor(Math.abs(Math.round(x))/60)+':'+String(Math.abs(Math.round(x))%60).padStart(2,'0');
+const ti=x=>new Date(x).toLocaleTimeString('es-AR',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+let full=false,lastFixWasGood=false,lossNotified=false,auditId='',muted=false,lastPaint=0;
+function plotSpeed(){
+ const a=act(),svg=q('speedWide0756'),meta=q('speedText0756');if(!a||!svg||!meta)return;
+ let data=[];try{data=JSON.parse(localStorage.getItem('auditoria_bn_0732_speed_history_'+a.id)||'[]')}catch(_){}
+ data=data.filter(d=>Number.isFinite(d?.t)&&Number.isFinite(d?.v)).sort((x,y)=>x.t-y.t);
+ if(!data.length){svg.innerHTML='<text x="40" y="110" font-size="19">Sin lecturas GPS de velocidad para este servicio.</text>';meta.textContent='No se reconstruyeron puntos faltantes.';return;}
+ const W=1050,H=420,L=70,R=24,T=48,B=48,t0=data[0].t,t1=Math.max(data[data.length-1].t,t0+60000),top=Math.max(40,Math.ceil(Math.max(...data.map(d=>Math.max(d.v,Number(d.l)||0)))/20)*20);
+ const x=t=>L+(t-t0)/(t1-t0)*(W-L-R),y=v=>H-B-v/top*(H-T-B),p=n=>Number(n).toFixed(1);
+ let result='<rect width="1050" height="420" fill="white"/>';
+ for(let i=0;i<=5;i++){const z=top*i/5;result+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+p(y(z))+'" y2="'+p(y(z))+'" stroke="#e0e7eb"/><text x="'+(L-8)+'" y="'+p(y(z)+4)+'" text-anchor="end" font-size="14">'+Math.round(z)+'</text>';}
+ for(let i=0;i<=6;i++){const t=t0+(t1-t0)*i/6;result+='<line x1="'+p(x(t))+'" x2="'+p(x(t))+'" y1="'+T+'" y2="'+(H-B)+'" stroke="#e9eef1"/><text x="'+p(x(t))+'" y="'+(H-12)+'" text-anchor="middle" font-size="14">'+ti(t).slice(0,5)+'</text>';}
+ let speed='',limit='',gaps=0;
+ for(let i=0;i<data.length;i++){
+  const d=data[i],prev=data[i-1],gap=prev&&d.t-prev.t>25000,cmd=!prev||gap?'M':'L';
+  if(gap){gaps++;result+='<rect x="'+p(x(prev.t))+'" y="'+T+'" width="'+p(x(d.t)-x(prev.t))+'" height="'+(H-B-T)+'" fill="#fff1cf" opacity=".6"/>';}
+  speed+=cmd+p(x(d.t))+','+p(y(d.v))+' ';
+  if(Number.isFinite(d.l))limit+=cmd+p(x(d.t))+','+p(y(d.l))+' ';
+ }
+ result+='<path d="'+limit+'" stroke="#738395" stroke-width="2.5" stroke-dasharray="8 5" fill="none"/><path d="'+speed+'" stroke="#0c829c" stroke-width="3" fill="none"/>'+
+ '<text x="80" y="24" font-size="15">Azul: velocidad GPS · Gris: límite documental · Amarillo: sin muestras</text>';
+ svg.innerHTML=result;
+ const eligible=data.filter(d=>Number.isFinite(d.gpsAccuracy)&&d.gpsAccuracy<=25&&Number.isFinite(d.pkAccuracy)&&d.pkAccuracy<=100).length;
+ meta.textContent=a.tren+': '+data.length+' muestras, '+gaps+' interrupción(es) visibles mayores a 25 segundos y '+eligible+' muestras dentro de los umbrales básicos GPS/PK. Esta comparación NO valida velocidades ni infracciones: PK y vía siguen pendientes de cotejo.';
+}
+function plotMarch(){
+ const svg=q('marchWide0756'),source=q('dMarchSvg0733'),note=q('marchText0756');
+ if(!svg||!source)return;
+ svg.setAttribute('viewBox',source.getAttribute('viewBox')||'0 0 780 470');svg.innerHTML=source.innerHTML;
+ if(note)note.textContent=q('dMarchNote0733')?.textContent||'Marcas de GPS estimadas frente al H-21, sin reconstruir estaciones faltantes.';
+}
+function plotTable(){
+ const a=act(),out=q('times0756'),info=q('timesText0756');if(!a||!out||!info)return;
+ let data=[];try{data=JSON.parse(localStorage.getItem('auditoria_bn_0728_records')||'[]')}catch(_){}
+ data=data.filter(x=>x.kind==='movimiento076'&&x.auditId===a.id).sort((x,y)=>(x.time||0)-(y.time||0));
+ const route=window.AuditoriaGPS0728?.stations||[],si=route.findIndex(x=>norm(x.name)===norm(a.origen)),ei=route.findIndex(x=>norm(x.name)===norm(a.destino));
+ const total=si>=0?Math.abs(ei-si)+1:23;
+ info.textContent=data.length+' eventos · '+new Set(data.map(x=>norm(x.station))).size+'/'+total+' estaciones con registro en el tramo. No representa automáticamente arribos y permanencias.';
+ out.innerHTML=data.length?data.map(r=>'<tr><td>'+escape(r.station)+'</td><td>'+escape(r.move)+'</td><td>'+escape(r.planned||'—')+'</td><td>'+escape(r.actual)+'</td><td>'+mss(r.diff)+'</td></tr>').join(''):'<tr><td colspan="5">Sin eventos registrados.</td></tr>';
+}
+function showGraph(){
+ const view=q('fullGraph0756');if(!view)return;
+ full=true;view.hidden=false;document.body.style.overflow='hidden';refreshGraph();view.scrollTop=0;
+}
+function refreshGraph(){
+ if(!full)return;
+ plotMarch();plotSpeed();plotTable();lastPaint=Date.now();
+}
+function mountGraph(){
+ const shell=create('section','fullGraph0756');shell.hidden=true;shell.setAttribute('role','dialog');shell.setAttribute('aria-modal','true');
+ shell.innerHTML='<header><h2>Gráficos ampliados de circulación</h2><button id="refresh0756">Actualizar</button><button id="close0756">Cerrar</button></header>'+
+ '<p>Panel visual del servicio. Deslizá lateralmente para ver todas las marcas. Los huecos GPS no se rellenan.</p>'+
+ '<section class="graphItem0756"><h3>Marcha y H-21</h3><div class="graphX0756"><svg id="marchWide0756" viewBox="0 0 780 470"></svg></div><p id="marchText0756"></p></section>'+
+ '<section class="graphItem0756"><h3>Velocidad GPS y límites documentales</h3><div class="graphX0756"><svg id="speedWide0756" viewBox="0 0 1050 420"></svg></div><p id="speedText0756"></p></section>'+
+ '<section class="graphItem0756"><h3>Horas y diferencias: minutos:segundos</h3><p id="timesText0756"></p><div class="graphX0756"><table><thead><tr><th>Estación</th><th>Evento estimado</th><th>H-21</th><th>GPS</th><th>Dif. m:ss</th></tr></thead><tbody id="times0756"></tbody></table></div></section>';
+ document.body.appendChild(shell);
+ q('close0756').onclick=()=>{shell.hidden=true;full=false;document.body.style.overflow=''};
+ q('refresh0756').onclick=refreshGraph;
+ const stats=q('dashboardStats0733');
+ if(stats){const btn=create('button','graphsOpen0756','↗ Ver gráficos ampliados');btn.type='button';btn.style.margin='10px 0';stats.querySelector('h2')?.after(btn);btn.onclick=showGraph;}
+}
+function mountCartels(){
+ const gps=q('autoPanel0728'),fold=q('cartelesManual0733');if(!gps||!fold)return;
+ gps.appendChild(fold);const fast=create('div','cartelesShort0756');
+ fast.innerHTML='<b>🪧 Control rápido de los tres carteles</b><p>Seleccioná precaución, tipo de cartel y resultado. Solo marcá «Faltante» si lo constataste físicamente; no por falla GPS.</p>'+
+ '<button data-type="aviso">Aviso</button><button data-type="inicio">Inicio</button><button data-type="fin">Fin</button><p id="cartelResult0756" role="status"></p>';
+ gps.insertBefore(fast,fold);
+ const result=q('signResult076');if(result&&!result.querySelector('option[value="no_observado"]'))result.add(new Option('No observado','no_observado'));
+ for(const button of fast.querySelectorAll('button'))button.onclick=()=>{fold.open=true;q('sign076').value=button.dataset.type;if(typeof loadRestrictions076==='function')loadRestrictions076();fold.scrollIntoView({behavior:'smooth',block:'center'});};
+ try{loadRestrictions076()}catch(_){}
+}
+function mountLoss(){
+ const bar=create('aside','lostGps0756');bar.hidden=true;bar.setAttribute('role','alert');
+ bar.innerHTML='<strong>⚠ GPS SIN LECTURAS</strong><p id="lostText0756">Ubicación pendiente.</p>'+
+ '<button id="reconnect0756">↻ Reanudar GPS</button><button class="secondary" id="mute0756">Silenciar alertas</button><p>Hasta recibir una nueva lectura, las estaciones y progresivas quedan sin confirmar.</p>';
+ document.body.appendChild(bar);
+ q('mute0756').onclick=()=>{muted=!muted;q('mute0756').textContent=muted?'Reactivar sonido/vibración':'Silenciar alertas'};
+ q('reconnect0756').onclick=()=>{
+  const a=act();if(!a||a.state!=='en_curso')return;
+  try{if(typeof stopTracking076==='function')stopTracking076();const btn=q('autoStart0728');if(!btn)throw Error('Botón no disponible');btn.disabled=false;btn.click();q('lostText0756').textContent='Reanudación solicitada para '+a.tren+'. Esperando una nueva lectura GPS.';}
+  catch(e){q('lostText0756').textContent='No pudo solicitarse la reanudación. Abrí GPS y reanudá el mismo servicio. '+e.message;}
+ };
+}
+function checkLoss(){
+ const a=act(),bar=q('lostGps0756');if(!bar)return;
+ if(!a||a.state!=='en_curso'){bar.hidden=true;auditId='';return;}
+ if(auditId!==a.id){auditId=a.id;lossNotified=false;lastFixWasGood=false;}
+ const fix=typeof lastGps076==='undefined'?null:lastGps076,created=Date.parse(a.created||'')||Date.now();
+ const fresh=fix&&Number.isFinite(fix.time)&&fix.time>=created-2000&&Date.now()-fix.time<20000;
+ if(fresh){bar.hidden=true;lastFixWasGood=true;lossNotified=false;return;}
+ const gap=Date.now()-Math.max(created,Number(fix?.time)||0);
+ if(gap<20000)return;
+ bar.hidden=false;
+ q('lostText0756').textContent='Servicio '+a.tren+': '+Math.round(gap/1000)+' segundos sin ubicación reciente. No se registran automáticamente las estaciones no detectadas.';
+ if(!lossNotified){lossNotified=true;if(!muted){try{window.AuditoriaAvisos0745?.emit?.('gps_sonido')}catch(_){}}}
+}
+function boot(){
+ if(!q('dashboardStats0733')||!q('autoPanel0728'))return false;
+ mountGraph();mountCartels();mountLoss();
+ setInterval(()=>{checkLoss();if(full&&Date.now()-lastPaint>=5000)refreshGraph()},1200);
+ return true;
+}
+let attempts=0;
+function init(){if(boot())return;if(++attempts<30)setTimeout(init,250);}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
 </script></body></html>
