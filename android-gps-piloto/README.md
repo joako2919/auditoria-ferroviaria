@@ -15,3 +15,5 @@ GitHub Actions: rama `android-gps-piloto-01`, flujo `APK piloto GPS Android (exp
 
 ## Prueba segura
 Iniciá GPS con la aplicación abierta y permiso de ubicación precisa. Verificá el aviso persistente, cambiá a WhatsApp o bloqueá la pantalla, volvé al piloto, detené la captura y exportá CSV. Revisá tiempos y posibles huecos, sin asumir posiciones en tramos no registrados.
+
+La compilación en GitHub utiliza el SDK Android preinstalado en el entorno de ejecución, sin instalar Android Studio en el teléfono.
