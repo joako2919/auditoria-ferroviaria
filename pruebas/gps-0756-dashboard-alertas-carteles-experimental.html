@@ -543,9 +543,29 @@ function classify076(diff,move){if(move==='partida'&&diff<=-30)return ['CRÍTICO
 function register076(){if(!document.getElementById('tren').value.trim()){alert('Primero cargá el número de tren.');return}if(!selected076){alert('Seleccioná una estación.');return}save();const now=new Date(),actual=now.toTimeString().slice(0,8),move=document.getElementById('move076').value,train=document.getElementById('tren').value.trim(),planned=schedule076(train,selected076,move),diff=planned?diff076(actual,planned):null,cl=diff===null?null:classify076(diff,move);const item={kind:'movimiento076',train,station:selected076,move,actual,planned:planned||null,diff,time:now.getTime(),gps:lastGps076?{...lastGps076}:null};records076.push(item);persist076();const target=document.getElementById('result076');target.style.background=cl?cl[1]:'#f5f5f5';target.textContent=selected076+' · '+move+' · '+actual+' · '+(cl?cl[0]+' (previsto '+planned+')':'Sin horario validado para '+train+' y este movimiento');if(cl&&cl[2]){target.className='v076alert';beep076()}else target.className='status';const order=ordered076(),i=order.indexOf(selected076);if(move!=='llegada'&&i>=0&&i+1<order.length)selected076=order[i+1];updateStations076();render()}
 async function importSchedules076(ev){const f=ev.target.files[0];if(!f)return;try{if(f.size>2000000)throw Error('Archivo mayor a 2 MB');const data=JSON.parse(await f.text());if(!data||Array.isArray(data)||typeof data!=='object')throw Error('Debe ser un objeto por número de tren');for(const [train,rows] of Object.entries(data)){if(!/^\d+$/.test(train)||!Array.isArray(rows)||!rows.every(x=>x&&typeof x.estacion==='string'&&['llegada','partida','paso'].some(k=>secs076(x[k])!==null)))throw Error('Datos inválidos para tren '+train);for(const x of rows)for(const k of ['llegada','partida','paso'])if(x[k]!==undefined&&secs076(x[k])===null)throw Error('Hora inválida '+train+' '+x.estacion)}schedules076={...schedules076,...data};localStorage.setItem(S076,JSON.stringify(schedules076));document.getElementById('scheduleStatus076').textContent='Horarios locales cargados para '+Object.keys(data).join(', ');draw076()}catch(e){alert('No se importaron horarios: '+e.message)}ev.target.value=''}
 function pk076(s){const m=/^(\d{1,2})\/(\d{3})$/.exec(String(s).trim());return m?Number(m[1])*1000+Number(m[2]):null}
-function restrictionList076(){const b=readBases075();return Array.isArray(b.velocidades)?b.velocidades:[]}
-function loadRestrictions076(){const s=document.getElementById('restriction076');s.replaceChildren(new Option('Seleccionar precaución…',''),...restrictionList076().map((x,i)=>new Option((x.inicio||x.pk||'?')+' → '+(x.fin||'?')+' · '+x.velocidad+' km/h',String(i))))}
-function showRestriction076(){const x=restrictionList076()[Number(document.getElementById('restriction076').value)];if(!x)return;document.getElementById('rStart076').value=x.inicio||x.pk||'';document.getElementById('rEnd076').value=x.fin||'';document.getElementById('rSpeed076').value=x.velocidad||''}
+function restrictionList076(){
+ const b=readBases075(),older=Array.isArray(b.velocidades)?b.velocidades:[];
+ const bulletin=typeof vigente080==='function'?vigente080():null;
+ const now=Array.isArray(bulletin?.registros)?bulletin.registros.filter(x=>x?.tipo==='precaucion_velocidad'&&x.inicio&&x.fin&&Number(x.velocidad)>0):[];
+ const all=now.map(x=>({...x,_fuente:'PDF '+(bulletin.fecha||'sin fecha')}))
+  .concat(older.filter(x=>x&&Number(x.velocidad)>0).map(x=>({...x,_fuente:'Base anterior'})));
+ const seen=new Set();
+ return all.filter(x=>{const k=[x.sentido||x.via||'',x.inicio||x.pk||'',x.fin||'',x.velocidad].join('|');if(seen.has(k))return false;seen.add(k);return true;});
+}
+function loadRestrictions076(){
+ const el=document.getElementById('restriction076');if(!el)return;
+ const old=el.value,options=restrictionList076();
+ el.replaceChildren(new Option('Seleccionar precaución para cotejar…',''),...options.map((x,i)=>new Option(x._fuente+' · '+(x.sentido||x.via||'')+' · '+(x.inicio||x.pk||'?')+' → '+(x.fin||'?')+' · '+x.velocidad+' km/h',String(i))));
+ if(old&&Number(old)<options.length)el.value=old;
+}
+function showRestriction076(){
+ const val=document.getElementById('restriction076')?.value;
+ if(val===undefined||val==='')return;
+ const x=restrictionList076()[Number(val)];if(!x)return;
+ document.getElementById('rStart076').value=x.inicio||x.pk||'';
+ document.getElementById('rEnd076').value=x.fin||'';
+ document.getElementById('rSpeed076').value=x.velocidad||'';
+}
 function beep076(){
  try{
   const A=window.AudioContext||window.webkitAudioContext;if(!A)return;
@@ -3717,6 +3737,7 @@ setInterval(()=>{
  };
  function write(){try{localStorage.setItem(KEY,JSON.stringify(prefs))}catch(_){}}
  function visual(type){
+   if(type==='beep'||type==='alerta'||type==='gps_sonido')return;
    const bar=$('alertVisual0745');
    if(!bar)return;
    $('alertVisualText0745').textContent=type==='detencion'
