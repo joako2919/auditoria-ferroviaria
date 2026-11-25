@@ -5,6 +5,7 @@ on:
       - android-gps-piloto-01
     paths:
       - 'android-gps-piloto/**'
+      - '.github/workflows/android-gps-piloto.yml'
   workflow_dispatch:
 
 permissions:
@@ -22,10 +23,14 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Preparar Android SDK
-        uses: android-actions/setup-android@v3
-      - name: Instalar SDK API 35
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Preparar SDK Android 35 desde runner
+        shell: bash
+        run: |
+          echo "SDK de Android: $ANDROID_HOME"
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | head -n 1)"
+          test -n "$SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
       - name: Preparar Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
         with:
