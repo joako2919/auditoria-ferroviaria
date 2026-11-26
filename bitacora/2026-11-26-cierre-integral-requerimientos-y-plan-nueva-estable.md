@@ -111,3 +111,18 @@ U5. Modo sin conexión: la auditoría y lectura de bases ya cargadas deben persi
 3. Probar en Samsung S22 y documentar resultado. No declarar resuelto sin evidencia; no publicar como versión estable hasta completar checklist de integridad e importadores.
 
 **Referencias de incidencias previas:** #4 (pérdida GPS y PK), #5 (gráficos, colores, límites). Este apéndice extiende #5.
+
+
+## G. Rectificación del color violeta — criterio ratificado por el auditor la noche del 26/11
+**Esta sección prevalece sobre cualquier frase anterior de esta bitácora que limite el violeta únicamente a una proyección a destino o que indique no definir aún su disparador básico.**
+
+- **REQUISITO OBLIGATORIO:** durante una auditoría en curso, **en cualquier estación intermedia o cabecera** donde una marca real utilizable y cotejada con el H21 registre una **demora superior a +5:00 minutos**, generar de inmediato una **alerta violeta**, visible en Estadísticas/dashboard, gráfico de hilo y tendencia, sin esperar a la llegada ni al cálculo final.
+- El disparador es la **demora observada de la estación**, no la extrapolación matemática de `updateTrend0720()`. Esa proyección puede ser una información adicional, nunca un filtro que impida alertar un exceso ya ocurrido.
+- **Retener el historial de alertas** con estación, servicio, fecha/hora, demora `+m:ss`, origen/calidad del registro y estado de atención, aunque el servicio recupere posteriormente la demora. No quitar ni reescribir la alerta cuando el destino marque menos de cinco minutos.
+- **Servicio 3095 como prueba de aceptación:** Los Polvorines `+5:59` ⇒ alerta violeta; Pablo Nogués `+5:06` ⇒ alerta violeta; Grand Bourg `+4:36` ⇒ recuperación y sin nueva alerta por ese dato, **conservando las dos previas**. Mostrar el descenso de demora en la tendencia y la recuperación acumulada desde el máximo. En una estación con GPS o marca horaria insuficiente, informar «sin dato verificable», no producir falsos positivos.
+- **Paleta transversal obligatoria:** celeste, verde, amarillo, naranja, rojo, violeta en el dashboard y TODOS los gráficos a los que apliquen las categorías operativas, con su leyenda y contadores incluso en cero. Conservar los colores de magnitud de demora y superponer un **marcador/borde/banda/ícono violeta de alarma** cuando corresponda, evitando que dos codificaciones se confundan. La clasificación visual y los umbrales específicos que aún no estén cerrados no deben inventarse: este acuerdo **sí fija** el umbral de disparo violeta como `demora real > +5:00`.
+- **Orientación PCZ:** la alerta violeta solicita atención del inspector y puede motivar información al Puesto de Control Zonal, con datos cotejados, evolución, tendencia y estación actual. **No** ejecuta ni recomienda automáticamente cortar un servicio; las decisiones operativas corresponden al PCZ y a los responsables habilitados.
+- **Corrección de código pendiente (no implementada por esta edición):** desacoplar alerta violeta de `critical=projected>5` en `updateTrend0720()`; agregar evaluación de marcas reales por estación y persistencia de alertas por auditoría, sin confundir «proyección de demora» con «demora observada». Probar que la alarma emerge cuando la estación cruza el umbral en tiempo real.
+- **Compatibilidad:** no afectar el respaldo JSON, los horarios, la identificación de servicio, la importación de bases ni la versión estable en producción.
+
+**Criterio inequívoco para seguir:** **violeta en el momento y lugar donde la demora verificada supera 5 minutos**, no solo en destino, manteniendo los demás colores y las evidencias históricas.
