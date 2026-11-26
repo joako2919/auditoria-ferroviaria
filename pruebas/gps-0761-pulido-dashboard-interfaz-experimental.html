@@ -4241,48 +4241,56 @@ function init(){if(setup())return;if(++attempts<32)setTimeout(init,250);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script><style id="pulido0761VacioCss">
-/* Corrección visual sobre la prueba real en S22; sin alterar auditorías ni cálculos. */
-#fullGraph0756 header h2{color:#153f52!important;opacity:1!important;text-shadow:none!important}
-#dashboardStats0733 .graphcard{min-width:0;overflow:hidden}
-#dashboardStats0733 .graphcard h3{overflow-wrap:anywhere}
-#dashboardStats0733 .graphcard .scrollviz{min-width:0;max-width:100%;overflow-x:auto}
-#dashboardStats0733 .graphcard p{overflow-wrap:anywhere;white-space:normal}
-#dashboardStats0733 .graphcard.graphNoData0761 .scrollviz{display:none!important}
-#dashboardStats0733 .graphcard.graphNoData0761{padding-bottom:10px}
-#dashboardStats0733 .graphcard.graphNoData0761 p{margin:5px 0 0;font-size:13px}
+/* Vista compacta cuando NO hay registros para graficar. No altera datos. */
+#fullGraph0756 header h2,#fullGraph0756 header h2 *{color:#173d4b!important;-webkit-text-fill-color:#173d4b!important;opacity:1!important;text-shadow:none!important}
+#dashboardStats0733 .graphcard,#fullGraph0756 .graphItem0756{min-width:0;max-width:100%;overflow:hidden}
+#dashboardStats0733 .graphcard h3,#fullGraph0756 .graphItem0756 h3{overflow-wrap:anywhere;white-space:normal}
+#dashboardStats0733 .graphcard .scrollviz{max-width:100%;overflow-x:auto}
+#dashboardStats0733 .graphcard p,#fullGraph0756 .graphItem0756 p{white-space:normal;overflow-wrap:anywhere}
+#dashboardStats0733 .graphcard.graphNoData0761 .scrollviz,
 #fullGraph0756 .graphItem0756.graphNoData0761 .graphX0756{display:none!important}
-#fullGraph0756 .graphItem0756.graphNoData0761{min-height:0!important}
-#fullGraph0756 .graphItem0756.graphNoData0761 p{overflow-wrap:anywhere}
+#dashboardStats0733 .graphcard.graphNoData0761,
+#fullGraph0756 .graphItem0756.graphNoData0761{min-height:0!important;height:auto!important;padding-bottom:12px!important}
+#dashboardStats0733 .graphcard.graphNoData0761 p,
+#fullGraph0756 .graphItem0756.graphNoData0761 p{margin:4px 0!important;min-height:0!important}
 </style><script id="pulido0761VacioJs">
 (function(){
 'use strict';
-/* Solamente comprime visualizaciones sin mediciones; nunca interpreta huecos GPS como cero o cumplimiento. */
-const ids=[['dSpeedSvg0733','dSpeedNote0733'],['dDiffSvg0733','dDiffNote0733'],['dMarchSvg0733','dMarchNote0733'],['dTrendSvg0733','dTrendNote0733'],['marchWide0756','marchText0756'],['speedWide0756','speedText0756']];
+const ids=[
+ ['dSpeedSvg0733','dSpeedNote0733'],['dDiffSvg0733','dDiffNote0733'],
+ ['dMarchSvg0733','dMarchNote0733'],['dTrendSvg0733','dTrendNote0733'],
+ ['marchWide0756','marchText0756'],['speedWide0756','speedText0756']
+];
 function compact(){
- for(const [svgId,noteId] of ids){
-  const svg=document.getElementById(svgId),note=document.getElementById(noteId);
+ for(const [id,noteId] of ids){
+  const svg=document.getElementById(id),note=document.getElementById(noteId);
   if(!svg)continue;
   const card=svg.closest('.graphcard,.graphItem0756');if(!card)continue;
-  const svgText=(svg.textContent||'').trim().toLowerCase();
-  const noteText=(note?.textContent||'').trim().toLowerCase();
-  const noData=/sin (suficientes |horarios |datos |lecturas |mediciones |registros )|esperando horarios|no hay (datos|lecturas|mediciones)|todavía no es posible/.test(svgText+' '+noteText);
-  const hasRealGraphic=!!svg.querySelector('path,polyline,polygon,rect,circle');
-  const isEmpty=!svg.children.length || (noData&&!hasRealGraphic);
-  card.classList.toggle('graphNoData0761',isEmpty);
+  const graph=!!svg.querySelector('path,polyline,polygon,line,circle');
+  const text=((svg.textContent||'')+' '+(note?.textContent||'')).toLowerCase();
+  const lacking=/sin suficientes datos|sin horarios registrados|esperando horarios reales|sin lecturas gps|sin datos reales|sin eventos registrados|no se reconstruyeron puntos faltantes|todavía no es posible|proyección no disponible|no hay mediciones/.test(text);
+  // Sin gráfica real: compactar. Un texto SVG no es una serie.
+  card.classList.toggle('graphNoData0761',!graph&&(lacking||svg.children.length===0));
+ }
+ const full=document.getElementById('fullGraph0756');
+ if(full){
+  // Evita tarjetas repetidas en ampliación, conservando siempre la primera.
+  const seen=new Set();
+  for(const card of full.querySelectorAll(':scope > .graphItem0756')){
+   const name=card.querySelector('h3')?.textContent?.trim()||'';
+   if(!name)continue;
+   if(seen.has(name))card.remove();else seen.add(name);
+  }
  }
 }
-let delayed=false;
-function schedule(){if(delayed)return;delayed=true;setTimeout(()=>{delayed=false;compact()},80)}
 function init(){
- const root=document.getElementById('dashboardStats0733');
- if(!root)return;
- const observer=new MutationObserver(schedule);
- observer.observe(root,{subtree:true,childList:true,characterData:true});
- const wide=document.getElementById('fullGraph0756');
- if(wide)observer.observe(wide,{subtree:true,childList:true,characterData:true});
  compact();
+ // Revisa los cambios gráficos sin observar ni modificar la estructura durante el render.
+ setInterval(compact,1200);
+ document.getElementById('graphsOpen0756')?.addEventListener('click',()=>setTimeout(compact,100));
+ document.getElementById('refresh0756')?.addEventListener('click',()=>setTimeout(compact,100));
 }
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(init,250),{once:true});
-else setTimeout(init,250);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(init,350),{once:true});
+else setTimeout(init,350);
 })();
 </script></body></html>
