@@ -4374,8 +4374,14 @@ else setTimeout(init,350);
     box.classList.remove('autoMode0762');view.className='unavailable0762';
     view.textContent='PK '+fix.pk+': no hay precaución PDF compatible en proximidad (1.200 m); sin cartel para sugerir.';return;
    }
-   const stage=item.remaining<=100?'fin':item.before<=0?'inicio':'aviso';
-   const distance=item.before>0?'faltan '+Math.round(item.before)+' m al inicio':item.remaining>0?'restan '+Math.round(item.remaining)+' m al fin':'fin de tramo próximo';
+   const length=Math.abs(item.end-item.start);
+   // No estimar cuál es el cartel en tramos muy cortos si el PK no tiene precisión suficiente.
+   if(fix.pkAccuracy>=length/2){
+    box.classList.remove('autoMode0762');view.className='unavailable0762';
+    view.textContent='PK '+fix.pk+' ±'+fix.pkAccuracy+' m: tramo documental de '+length+' m. GPS insuficiente para distinguir los tres carteles; control visual y manual indispensable.';return;
+   }
+   const stage=item.before>0?'aviso':item.remaining<=Math.min(50,length/4)?'fin':'inicio';
+   const distance=item.before>800?'preparación: a '+Math.round(item.before)+' m del inicio (aviso previsto a 800 m)':item.before>0?'aviso: faltan '+Math.round(item.before)+' m al inicio':item.remaining>0?'dentro de la precaución, restan '+Math.round(item.remaining)+' m al fin':'fin de tramo próximo';
    view.className='';
    view.textContent='Sugerencia GPS · '+item.r._fuente+' · '+dir+' · '+fmt(item.start)+' → '+fmt(item.end)+' · máximo documental '+item.limit+' km/h. '+distance+'. Control a observar: '+stage.toUpperCase()+'. Velocidad GPS '+Number(fix.v).toFixed(1)+' km/h. PK estimado ±'+fix.pkAccuracy+' m; requiere verificación.';
    if(Date.now()<manualUntil){box.classList.remove('autoMode0762');view.textContent+=' Selección manual temporalmente activa.';return;}
