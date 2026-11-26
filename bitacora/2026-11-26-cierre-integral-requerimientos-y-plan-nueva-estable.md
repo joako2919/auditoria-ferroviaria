@@ -83,3 +83,31 @@ U5. Modo sin conexión: la auditoría y lectura de bases ya cargadas deben persi
 - **Este documento es especificación y cierre de trabajo, no certificación operativa.** Hasta nueva prueba y aprobación, la 0.7.62 sigue siendo experimental y la 0.7.22 histórica sigue sin sustituirse en GitHub Pages.
 
 **Punto de continuidad:** abrir ESTE documento y comenzar por candidata estable + importadores, no rehacer H21 ni volver a probar tareas ya cerradas.
+
+## F. Complemento nocturno del 26/11 — Tendencia PCZ, diferencia mm:ss y seguridad de acceso
+**Evidencias:** tres capturas de Estadísticas, servicio 3095, tomadas entre las 20:10 y 20:11; comprobación directa del HTML experimental 0.7.62 en GitHub. **Ningún cambio del código de la aplicación se confirma con esta nota**.
+
+### Incidencia P1 — Tendencia hacia destino no es comprensible ni útil para PCZ
+- Captura muestra sección «Tendencia hacia destino» casi vacía, únicamente línea horizontal punteada con marca 0, y texto: destino Grand Bourg, H21 17:33:00, llegada estimada 17:37, desviación proyectada +4,6 min, basada en cinco observaciones. Pese a existir diferencias reales por estación, el trazado real y el proyectado no se distinguen en móvil.
+- Código revisado: función `updateTrend0720()` de la experimental 0.7.62 toma hasta cinco últimas estaciones con `diff`, estima pendiente mediante regresión lineal entre índice de estación y demora expresada en minutos, extrapola hasta destino y dibuja polilínea roja real y tramo violeta discontinuo supuesto. **No incorpora causas, detenciones no previstas, acciones PCZ, tramos sin datos ni una evaluación confiable de continuidad de tendencia.**
+- El color **violeta** de este módulo no aparece si la **proyección a destino** es ≤5 min, aunque la **demora real actual** haya sido >5 min. Por ejemplo, servicio 3095 tuvo +5:59 en Los Polvorines y +5:06 en Pablo Nogués, pero al final la demora registrada fue +4:36, por lo que no hay alerta violeta en la proyección de +4,6 min. No cambiar el umbral violeta arbitrariamente: acordar semántica de los seis colores y separar «demora real» de «alerta de deterioro de tendencia».
+- **Requerimiento:** sustituir gráfica vacía por vista legible de **demora real H21 por estación**, con ejes, valores `±m:ss` y seis colores según reglas acordadas; indicar si entre estaciones se ganó/perdió tiempo; añadir proyección gráfica hacia próximas estaciones y destino solamente si hay cantidad/calidad suficiente de marcas y siempre etiquetada como **estimación no validada**. Mostrar fecha/hora de corte, estación actual, destino, tiempo/estaciones restantes, porcentaje de traza con marcas, calidad GPS, intervalo de incertidumbre y aviso si no hay suficientes datos; no interpolar huecos.
+- **Orientación PCZ:** habilitar un aviso breve y explicable para que **el inspector evalúe comunicar** deterioro persistente y proyección de demora al Puesto de Control Zonal, sin recomendar automáticamente suspensión/corte de servicios, asignación de vía o decisiones de seguridad. La gestión de circulación corresponde al PCZ con fuentes operativas corroboradas; evitar falsa precisión predictiva.
+- **Cuando ya haya llegada real a destino**, mostrar resultado observado (por ejemplo, Grand Bourg 17:37:36 frente a 17:33:00 = +4:36) en vez de titularlo «estimado» o proyectarlo retrospectivamente; la curva de tendencia pasa a evolución histórica.
+- **Prueba de aceptación:** en el respaldo 3095, ver progresión Montes +2:51, Don Torcuato +3:15, A. Sourdeaux +3:44, Villa de Mayo +4:52, Los Polvorines +5:59, Pablo Nogués +5:06, Grand Bourg llegada +4:36; destacar recuperación de 1:23 desde Polvorines, sin inventar una demora violeta. Cuando las estaciones carezcan de marcas, debe informarse ausencia de cálculo; cuando el servicio esté cerrado, debe informarse resultado real.
+
+### Regresión P0 — Diferencias H21 siguen en segundos pese a requerimiento antiguo mm:ss
+- Capturas: tabla de Horarios y permanencias muestra la columna «Dif. H21» como `+58 s`, `+70 s`, `+100 s`, `+141 s`, `+195 s`, `+292 s`, `+359 s`, `+306 s`, `+276 s`.
+- **Causa concreta en código:** en el script `integralH21GPS0730`, la función `const mark=x=>x==null?'—':(x>0?'+':'')+Math.round(x)+' s';` se usa en la tabla `#dwellRows0730`. En el MISMO código existe `mmss0756(v)` que devuelve diferencias `±m:ss`. Se debe reusar una única función de presentación sin reescribir datos persistidos: `+58 s→+0:58`, `+100 s→+1:40`, `+141 s→+2:21`, `+359 s→+5:59`; adelantos con signo negativo; `0:00` si hay dato cero y raya cuando falta.
+- **Diseño móvil:** nombres de estación y columnas se cortan por ancho; render responsivo legible en pantalla Samsung (fila por estación, o tarjetas con etiquetas) y opción tabla ampliada/exportable sin scroll forzado de cabeceras.
+- **Prueba de regresión obligatoria** en versión estable candidata: TODOS los paneles, tablas, informes, gráficos, exportaciones y vistas A4 deben mostrar al usuario las diferencias en m:ss sin convertirlas otra vez en segundos. Mantener datos internos en segundos para precisión aritmética.
+
+### Nota de credenciales privadas (NO reproducir contenido)
+- El auditor aclaró una contraseña de acceso por chat. **NO registrar su texto ni forma exacta en repositorio, bitácora, issue o código cliente HTML/JavaScript**; cualquier clave embebida en cliente público puede ser vista por terceros. Si existe autenticación real, definir acceso mediante backend/servicio adecuado y almacenamiento seguro, o revisar el mecanismo. Este cierre solo anota el requisito de tratarla como **credencial privada**.
+
+### Próxima sesión
+1. Comprobar respaldo JSON anterior a cualquier migración. En copia de 0.7.62 destinada a nueva estable, corregir `mark()` → formato común de `m:ss` y tabla responsive; conservar historicidad.
+2. Rediseñar tendencia / PCZ con valores de servicio 3095 y criterios de alerta explícitos; distinguir atraso real de proyección y serie sin datos.
+3. Probar en Samsung S22 y documentar resultado. No declarar resuelto sin evidencia; no publicar como versión estable hasta completar checklist de integridad e importadores.
+
+**Referencias de incidencias previas:** #4 (pérdida GPS y PK), #5 (gráficos, colores, límites). Este apéndice extiende #5.
