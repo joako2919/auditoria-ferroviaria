@@ -126,3 +126,27 @@ U5. Modo sin conexión: la auditoría y lectura de bases ya cargadas deben persi
 - **Compatibilidad:** no afectar el respaldo JSON, los horarios, la identificación de servicio, la importación de bases ni la versión estable en producción.
 
 **Criterio inequívoco para seguir:** **violeta en el momento y lugar donde la demora verificada supera 5 minutos**, no solo en destino, manteniendo los demás colores y las evidencias históricas.
+
+
+## H. Política permanente: pruebas de regresión obligatorias
+**Decisión confirmada por el auditor:** en cada mejora del software, aplicar **siempre** pruebas de regresión antes de dar el cambio por terminado o ascender una versión a estable. No basta que el módulo modificado funcione: también deben seguir funcionando los módulos relacionados y los que ya habían sido validados.
+
+### Procedimiento obligatorio de cada cambio
+1. **Antes:** revisar bitácora, incidencias, código actual y resultados de pruebas previas; preparar respaldo JSON y copia/versionado del código sin tocar el historial real.
+2. **Cambio pequeño y trazable:** crear o corregir un componente aislado; anotar archivo, versión/commit, motivo y conducta esperada.
+3. **Prueba específica:** verificar con datos de ejemplo o copia aislada que la nueva corrección funcione.
+4. **Pruebas de regresión:** repetir los casos importantes ya superados y los que pueden verse afectados. Mantener una lista de controles permanentes para evitar olvidos.
+5. **Validación en Samsung S22:** cuando el cambio afecta interfaz, GPS, archivos o circulación, realizar las pruebas móviles pertinentes; separar prueba técnica de verificación de campo.
+6. **Cierre:** registrar resultado **aprobado / fallido / no ejecutado**, evidencia, incidencia y acciones pendientes. Si falla, no etiquetar estable ni sustituir la versión operativa; conservar ruta de reversión.
+
+### Lista base mínima de regresión
+- Importadores personal, señales, boletín e itinerarios: **PDF, Excel, JSON** según módulo; lectura, vista previa, validación, guardado, persistencia tras recarga, exportación y restauración (notar dependencia CDN/offline).
+- H21 y estaciones: 23 estaciones; **Aristóbulo del Valle y Cecilia Grierson conservadas**, Scalabrini Ortiz ausente según H21; selección de servicio/dotación/cabeceras.
+- Horarios: arribo, partida, paso, permanencia, diferencia y reportes **en ±m:ss** en todas las vistas; datos faltantes no inventados.
+- Historial: cada servicio/fecha aislado, novedades numeradas, sin pérdida ni duplicación de registros al abrir/cerrar/reanudar; JSON de respaldo íntegro.
+- GPS: pérdidas, reanudación del botón rojo sin crear auditoría, distinción entre coordenadas y PK validado, cortes sin falsas marcas.
+- Carteles y velocidades: boletín vigente, sentido/vía/PK y precisión, aviso/inicio/fin observados manualmente, precauciones provisoria y permanente diferenciadas, avisos sonoros/vibratorios.
+- Dashboard y gráficos: seis colores (incluido **violeta por demora real >5:00 en cualquier estación**), escalas y unidades, atraso/recuperación, tendencia, cero vs sin datos, sin duplicados ni recortes en Samsung.
+- Seguridad: no publicar bases privadas, datos personales o claves en repositorio; no borrar información productiva para resolver fallos.
+
+**Criterio de aprobación:** un cambio solo pasa a "corregido y verificado" con evidencias de pruebas correspondientes. Hasta entonces es "implementado, pendiente de pruebas". Una versión nueva solo se declara estable tras superar la lista de regresión y obtener aprobación de su uso.
