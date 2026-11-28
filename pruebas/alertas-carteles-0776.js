@@ -10,10 +10,18 @@ const direction=x=>/asc|impar/i.test(String(x||''))?'asc':/desc|par/i.test(Strin
 const key=(a,r,t)=>[a.id,r._fuente,r.inicio||r.pk,r.fin,r.velocidad,t].join('|');
 const inStore=(a,k)=>typeof records076!=='undefined'&&records076.some(x=>x.kind==='cartel076'&&x.auditId===a.id&&x.controlKey0776===k);
 let shown='',selected='',lastAudit='',lastPk=NaN;
+const pendientes=new Map();
 function ui(){
  if(el('alertaCartel0776'))return;
+ const tools=el('herramientasPanel0742'),manual=el('restriction076')?.closest('section');
+ if(tools&&manual&&!tools.contains(manual)){
+  const detail=document.createElement('details');detail.id='cartelesHerramientas0776';
+  const sum=document.createElement('summary');sum.textContent='Carteles y precauciones · control manual';
+  detail.appendChild(sum);detail.appendChild(manual);tools.appendChild(detail);
+ }
+
  const css=document.createElement('style');css.id='alertaCartel0776Css';css.textContent=
- '#alertaCartel0776[hidden]{display:none!important}#alertaCartel0776{position:fixed;z-index:99980;left:10px;right:10px;bottom:12px;max-width:560px;margin:auto;box-shadow:0 9px 32px #0005;border-radius:14px;border:2px solid #177489;background:white;padding:12px;font:15px system-ui;max-height:85dvh;overflow:auto}'+
+ '#ensayoStatus0775{display:none!important}#alertaCartel0776[hidden]{display:none!important}#alertaCartel0776{position:fixed;z-index:99980;left:10px;right:10px;bottom:12px;max-width:560px;margin:auto;box-shadow:0 9px 32px #0005;border-radius:14px;border:2px solid #177489;background:white;padding:12px;font:15px system-ui;max-height:85dvh;overflow:auto}'+
  '#alertaCartel0776.grande0776{bottom:auto;top:50%;transform:translateY(-50%);border:3px solid #b51220;padding:18px}#alertaCartel0776 h2{font:800 19px system-ui;margin:0 0 8px;color:#222}#alertaCartel0776 .info0776{line-height:1.45;margin-bottom:10px}#alertaCartel0776 .acciones0776{display:flex;gap:8px;flex-wrap:wrap}#alertaCartel0776 button{flex:1;min-width:120px}#alertaCartel0776 button[data-v="visto"]{background:#197a40}#alertaCartel0776 button[data-v="no_visto"]{background:#a61b2a}#alertaCartel0776 button[data-v="no_controlado"]{background:#374151}';
  document.head.appendChild(css);
  const node=document.createElement('aside');node.id='alertaCartel0776';node.hidden=true;node.setAttribute('role','status');
@@ -59,29 +67,30 @@ function nextCandidate(a,fix,actual){
 }
 function tick(){
  ui();const a=window.AuditoriaGPS0728?.getActive?.();
- if(!a||a.state!=='en_curso'){hide();shown='';return}
- if(a.id!==lastAudit){shown='';lastAudit=a.id;lastPk=NaN;hide();}
+ if(!a||a.state!=='en_curso'){hide();shown='';pendientes.clear();return;}
+ if(a.id!==lastAudit){shown='';lastAudit=a.id;lastPk=NaN;pendientes.clear();hide();}
  if(!el('verifyBulletin0730')?.checked){hide();return;}
  let series=[];try{series=JSON.parse(localStorage.getItem('auditoria_bn_0732_speed_history_'+a.id)||'[]')}catch(_){}
  const fix=Array.isArray(series)?series.at(-1):null,actual=meters(fix?.pk);
  if(!fix||!Number.isFinite(fix.t)||Date.now()-fix.t>cfg.ageMs||!Number.isFinite(actual)||
     !Number.isFinite(fix.gpsAccuracy)||fix.gpsAccuracy>cfg.accuracy||
     !Number.isFinite(fix.pkAccuracy)||fix.pkAccuracy>cfg.pkAccuracy){hide();return;}
- // Descartar retrocesos pequeños: tolerancia de cierre GPS; no reabrir controles ya guardados.
- const c=nextCandidate(a,fix,actual);
- if(!c){hide();lastPk=actual;return;}
- const grand=c.dist<=cfg.grande;
- const was=window.__cartelActual0776;
- if(was&&was.key!==c.key&&!inStore(a,was.key)&&was.dist<=cfg.grande&&was.dist>=-cfg.cierre&&grand){
-  // Prioridad: un único control grande; los otros se mantienen en cola.
+ const sgn=el('direction076')?.value==='desc'?-1:1;
+ // Cierre sólo para controles previamente mostrados. Saltos GPS no prueban ausencia física.
+ for(const [id,prior] of pendientes){
+  if(prior.audit.id!==a.id||inStore(a,id)){pendientes.delete(id);continue;}
+  const remaining=(prior.target-actual)*sgn;
+  if(remaining< -cfg.cierre){
+   save({...prior,actual,fix},'sin_verificar');
+   pendientes.delete(id);
+  }
  }
- if(was&&!inStore(a,was.key)){
-  const d=(was.target-actual)*(el('direction076')?.value==='desc'?-1:1);
-  if(d< -cfg.cierre){save({...was,actual,fix},'sin_verificar');}
- }
- const chosen=nextCandidate(a,fix,actual);if(!chosen){hide();return;}
- const node=el('alertaCartel0776');
+ let chosen=nextCandidate(a,fix,actual);
+ if(!chosen){hide();lastPk=actual;return;}
  if(shown!==chosen.key){selected='';el('alertaConfirm0776').hidden=true;}
+ pendientes.set(chosen.key,chosen);
+ const node=el('alertaCartel0776');
+ const firstBig=chosen.dist<=cfg.grande && (shown!==chosen.key||!node.classList.contains('grande0776'));
  shown=chosen.key;window.__cartelActual0776=chosen;
  node.hidden=false;node.classList.toggle('grande0776',chosen.dist<=cfg.grande);
  const label={aviso:'AVISO',inicio:'INICIO',fin:'FIN'}[chosen.type];
@@ -91,6 +100,7 @@ function tick(){
  ' · '+chosen.r.velocidad+' km/h. GPS estimado ±'+Math.round(fix.pkAccuracy)+' m.';
  el('alertaAcciones0776').hidden=chosen.dist>cfg.grande||!!selected;
  el('alertaConfirm0776').hidden=chosen.dist>cfg.grande||!selected;
+ if(firstBig)try{window.AuditoriaAvisos0745?.emit?.('alerta')}catch(_){}
  lastPk=actual;
 }
 window.AuditoriaCarteles0776={config:cfg,meters,fmt,direction,key,nextCandidate,tick};
