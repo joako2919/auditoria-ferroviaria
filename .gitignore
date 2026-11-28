@@ -1,0 +1,22 @@
+# Evitar cargas accidentales de material privado al repositorio público.
+# No sustituye revisión manual: los archivos rastreados previamente siguen en Git.
+datos-privados/
+privado/
+private/
+respaldos/
+backups/
+nominas/
+dotaciones-reales/
+*.private.json
+*.privado.json
+*respaldo*.json
+*backup*.json
+*nomina*.xlsx
+*nomina*.xls
+*legajo*.xlsx
+*legajo*.xls
+*dotacion*.xlsx
+*dotacion*.xls
+*.env
+.env.*
+!.env.example
